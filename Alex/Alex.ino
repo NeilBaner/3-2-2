@@ -187,8 +187,9 @@ void rightISR()
 void setupEINT()
 {
   // Use bare-metal to configure pins 2 and 3 to be
-  // falling edge triggered. Remember to enable
-  // the INT0 and INT1 interrupts.
+  // falling edge triggered. 
+  EICRA = 0b00001010;
+  EIMSK = 0b00000011;
 }
 
 // Implement the external interrupt ISRs below.
