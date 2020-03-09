@@ -167,6 +167,14 @@ void enablePullups()
   
 }
 
+ISR(INT0_vect){
+  leftISR();
+}
+
+ISR(INT1_vect){
+  rightISR();
+}
+
 // Functions to be called by INT0 and INT1 ISRs.
 void leftISR()
 {
