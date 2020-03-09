@@ -17,7 +17,3 @@ pin6 - ain2
 pin10 - bin1
 pin11 - bin2
 
-
-
-
-
