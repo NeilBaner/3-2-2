@@ -164,7 +164,8 @@ void enablePullups()
   // Use bare-metal to enable the pull-up resistors on pins
   // 2 and 3. These are pins PD2 and PD3 respectively.
   // We set bits 2 and 3 in DDRD to 0 to make them inputs. 
-  
+  DDRD &= 0b11110011;
+  PORTD |= 0b00001100;
 }
 
 ISR(INT0_vect){
