@@ -17,11 +17,11 @@
 | D11 | PB3 | OC2A |
 | D12 | PB4 | |
 | D13 | PB5 | |
-| A0 | PC0 | |
-| A1 | PC1 | |
-| A2 | PC2| |
-| A3 | PC3 | |
-| A4 | PC4 | |
-| A5 | PC5 | |
+| A0 | PC0 | ADC0 |
+| A1 | PC1 | ADC1 |
+| A2 | PC2| ADC2 |
+| A3 | PC3 | ADC3 |
+| A4 | PC4 | ADC4 |
+| A5 | PC5 | ADC5 |
 | Crystal | PB6 | |
 | Crystal | PB7 | |
