@@ -6,7 +6,7 @@
 
 **a1out** ground
 
-**a2out** +ve 
+**a2out** +ve
 
 ## left
 
@@ -18,7 +18,7 @@
 
 **pin2** Left Encoder
 
-**pin3** Right Encoder 
+**pin3** Right Encoder
 
 **pin5** AIN1
 
