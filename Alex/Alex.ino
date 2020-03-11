@@ -10,13 +10,13 @@
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV      1
+#define COUNTS_PER_REV      192
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
 // by taking revs * WHEEL_CIRC
 
-#define WHEEL_CIRC          1
+#define WHEEL_CIRC          20.42
 
 // Motor control pins. You need to adjust these till
 // Alex moves in the correct direction
@@ -180,15 +180,27 @@ ISR(INT1_vect){
 void leftISR()
 {
   leftTicks++;
+  leftRevs = leftTicks / COUNTS_PER_REV;
+  forwardDist = (leftTicks * WHEEL_CIRC) / COUNTS_PER_REV;  
   Serial.print("LEFT: ");
   Serial.println(leftTicks);
+  Serial.print("REVS: ");
+  Serial.println(leftRevs);
+  Serial.print("Distance: ");
+  Serial.println(forwardDist);
 }
 
 void rightISR()
 {
   rightTicks++;
+  rightRevs = rightTicks / COUNTS_PER_REV;
+  forwardDist = (rightTicks * WHEEL_CIRC) / COUNTS_PER_REV;  
   Serial.print("RIGHT: ");
   Serial.println(rightTicks);
+  Serial.print("REVS: ");
+  Serial.println(rightRevs);
+  Serial.print("Distance: ");
+  Serial.println(forwardDist);
 }
 
 // Set up the external interrupt pins INT0 and INT1
@@ -541,8 +553,7 @@ void handlePacket(TPacket *packet)
 void loop() {
 
 // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
-
-// forward(0, 100);
+  forward(0, 100);
 
 // Uncomment the code below for Week 9 Studio 2
 
