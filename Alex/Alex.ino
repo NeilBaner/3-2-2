@@ -206,22 +206,22 @@ void leftISR()
 {
   if(dir == FORWARD){
     leftForwardTicks++;
+    forwardDist = ((float)(leftForwardTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
   }else if(dir == BACKWARD){
     leftReverseTicks++;
+    reverseDist = ((float)(leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }
-  leftRevs = (leftForwardTicks - leftReverseTicks) / COUNTS_PER_REV;
-  forwardDist = ((leftForwardTicks - leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
 }
 
 void rightISR()
 {
   if(dir == FORWARD){
     rightForwardTicks++;
+    forwardDist = ((float)(rightForwardTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
   }else if(dir == BACKWARD){
     rightReverseTicks++;
+    reverseDist = ((float)(rightReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }
-  rightRevs = (rightForwardTicks - rightReverseTicks) / COUNTS_PER_REV;
-  forwardDist = ((rightForwardTicks - rightReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
 }
 
 // Set up the external interrupt pins INT0 and INT1
