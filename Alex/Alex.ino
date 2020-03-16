@@ -306,7 +306,7 @@ void forward(float dist, float speed) {
     dir = FORWARD;
     int val = pwmVal(speed);
     int distDesired = forwardDist + dist;
-    while (forwardDist < distDesired) {
+    while (forwardDist < distDesired || dist == 0) {
         OC0B = val;
         OC1B = val;
         OC0A = 0;
@@ -324,7 +324,7 @@ void reverse(float dist, float speed) {
     dir = BACKWARD;
     int val = pwmVal(speed);
     int distDesired = reverseDist + dist;
-    while (reverseDist < distDesired) {
+    while (reverseDist < distDesired || dist == 0) {
         OC0A = val;
         OC1A = val;
         OC0B = 0;
