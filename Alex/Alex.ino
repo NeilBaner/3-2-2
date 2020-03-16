@@ -18,13 +18,9 @@ typedef enum {
 
 // Number of ticks per revolution from the
 // wheel encoder.
-
 #define COUNTS_PER_REV 192
 
 // Wheel circumference in cm.
-// We will use this to calculate forward/backward distance traveled
-// by taking revs * WHEEL_CIRC
-
 #define WHEEL_CIRC 20.42
 
 // Motor control pins. You need to adjust these till
@@ -88,13 +84,6 @@ TResult readPacket(TPacket *packet) {
 }
 
 void sendStatus() {
-    // Implement code to send back a packet containing key
-    // information like leftTicks, rightTicks, leftRevs, rightRevs
-    // forwardDist and reverseDist
-    // Use the params array to store this information, and set the
-    // packetType and command files accordingly, then use sendResponse
-    // to send out the packet. See sendMessage on how to use sendResponse.
-    //
     TPacket status;
     status.command = COMMAND_GET_STATS;
     status.packetType = PACKET_TYPE_RESPONSE;
@@ -116,7 +105,6 @@ void sendStatus() {
 void sendMessage(const char *message) {
     // Sends text messages back to the Pi. Useful
     // for debugging.
-
     TPacket messagePacket;
     messagePacket.packetType = PACKET_TYPE_MESSAGE;
     strncpy(messagePacket.data, message, MAX_STR_LEN);
@@ -232,8 +220,6 @@ void rightISR() {
 // Set up the external interrupt pins INT0 and INT1
 // for falling edge triggered. Use bare-metal.
 void setupEINT() {
-    // Use bare-metal to configure pins 2 and 3 to be
-    // falling edge triggered.
     EICRA = 0b00001010;
     EIMSK = 0b00000011;
 }
@@ -247,31 +233,27 @@ ISR(INT1_vect) { rightISR(); }
  *
  */
 // Set up the serial connection.
+// TODO: Convert to bare-metal
 void setupSerial() {
-    // To replace later with bare-metal.
     Serial.begin(9600);
 }
 
 // Start the serial connection.
-
+// TODO: Implement
 void startSerial() {
-    // Empty for now. To be replaced with bare-metal code
-    // later on.
 }
 
 // Read the serial port. Returns the read character in
 // ch if available. Also returns TRUE if ch is valid.
-// This will be replaced later with bare-metal code.
-
+// TODO: Convert to bare-metal
 int readSerial(char *buffer) {
     int count = 0;
     while (Serial.available()) buffer[count++] = Serial.read();
     return count;
 }
 
-// Write to the serial port. Replaced later with
-// bare-metal code
-
+// Write to the serial port. 
+// TODO: Convert to bare-metal
 void writeSerial(const char *buffer, int len) { Serial.write(buffer, len); }
 
 /*
@@ -326,10 +308,10 @@ void forward(float dist, float speed) {
     int val = pwmVal(speed);
     int distDesired = forwardDist + dist;
     while (forwardDist < distDesired || dist == 0) {
-        OC0B = val;
-        OC1B = val;
-        OC0A = 0;
-        OC1A = 0;
+        OCR0B = val;
+        OCR1B = val;
+        OCR0A = 0;
+        OCR1A = 0;
     }
     stop();
 }
@@ -344,10 +326,10 @@ void reverse(float dist, float speed) {
     int val = pwmVal(speed);
     int distDesired = reverseDist + dist;
     while (reverseDist < distDesired || dist == 0) {
-        OC0A = val;
-        OC1A = val;
-        OC0B = 0;
-        OC1B = 0;
+        OCR0A = val;
+        OCR1A = val;
+        OCR0B = 0;
+        OCR1B = 0;
     }
     stop();
 }
@@ -357,14 +339,14 @@ void reverse(float dist, float speed) {
 // turn left at half speed.
 // Specifying an angle of 0 degrees will cause Alex to
 // turn left indefinitely.
+// TODO: Implement angle
 void left(float ang, float speed) {
     dir = LEFT;
     int val = pwmVal(speed);
-    // For now we will ignore ang. We will fix this in Week 9.
-    OC0B = val;
-    OC1A = val;
-    OC0A = 0;
-    OC1B = 0;
+    OCR0B = val;
+    OCR1A = val;
+    OCR0A = 0;
+    OCR1B = 0;
 }
 
 // Turn Alex right "ang" degrees at speed "speed".
@@ -372,25 +354,23 @@ void left(float ang, float speed) {
 // turn left at half speed.
 // Specifying an angle of 0 degrees will cause Alex to
 // turn right indefinitely.
+// TODO: Implement angle
 void right(float ang, float speed) {
     dir = RIGHT;
     int val = pwmVal(speed);
-    // For now we will ignore ang. We will fix this in Week 9.
-    // To turn right we reverse the right wheel and move
-    // the left wheel forward.
-    OC0A = val;
-    OC1B = val;
-    OC0B = 0;
-    OC1A = 0;
+    OCR0A = val;
+    OCR1B = val;
+    OCR0B = 0;
+    OCR1A = 0;
 }
 
-// Stop Alex. To replace with bare-metal code later.
+// Stop Alex. 
 void stop() {
     dir = STOP;
-    analogWrite(LF, 0);
-    analogWrite(LR, 0);
-    analogWrite(RF, 0);
-    analogWrite(RR, 0);
+    OCR0A = 0;
+    OCR0B = 0;
+    OCR1A = 0;
+    OCR1B = 0;
 }
 
 /*
