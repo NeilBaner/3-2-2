@@ -59,6 +59,9 @@ volatile unsigned long rightRevs;
 volatile unsigned long forwardDist;
 volatile unsigned long reverseDist;
 
+// Angle of Alex
+volatile unsigned long angle;
+
 // The direction in which Alex should move
 volatile TDirection dir = STOP;
 
@@ -92,6 +95,22 @@ void sendStatus() {
     // packetType and command files accordingly, then use sendResponse
     // to send out the packet. See sendMessage on how to use sendResponse.
     //
+    TPacket status;
+    status.command = COMMAND_GET_STATS;
+    status.packetType = PACKET_TYPE_RESPONSE;
+    status.params[0] = leftForwardTicks;
+    status.params[1] = rightForwardTicks;
+    status.params[2] = leftReverseTicks;
+    status.params[3] = rightReverseTicks;
+    status.params[4] = leftForwardTicksTurns;
+    status.params[5] = rightForwardTicksTurns;
+    status.params[6] = leftReverseTicksTurns;
+    status.params[7] = rightReverseTicksTurns;
+    status.params[8] = forwardDist;
+    status.params[9] = reverseDist;
+    status.params[10] = angle;
+    sendResponse(&status);
+    delete status;
 }
 
 void sendMessage(const char *message) {
@@ -397,7 +416,6 @@ void clearCounters() {
 
 // Clears one particular counter
 void clearOneCounter(int which) { clearCounters; }
-// Intialize Vincet's internal states
 
 void initializeState() { clearCounters(); }
 
@@ -424,12 +442,6 @@ void handleCommand(TPacket *command) {
             sendOK();
             stop();
             break;
-
-            /*
-             * Implement code for other commands here.
-             *
-             */
-
         default:
             sendBadCommand();
     }
@@ -494,9 +506,7 @@ void handlePacket(TPacket *packet) {
 }
 
 void loop() {
-    // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
     forward(0, 100);
-
     // Uncomment the code below for Week 9 Studio 2
 
     /*
