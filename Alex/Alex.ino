@@ -1,8 +1,18 @@
 #include <serialize.h>
+#include <stdarg.h>
 
 #include "packet.h"
 #include "constants.h"
 
+typedef enum{
+  STOP = 0,
+  FORWARD = 1,
+  BACKWARD = 2,
+  LEFT = 3,
+  RIGHT = 4
+}TDirection;
+
+volatile TDirection dir = STOP;
 /*
  * Alex's configuration constants
  */
@@ -10,13 +20,13 @@
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV      1
+#define COUNTS_PER_REV      192
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
 // by taking revs * WHEEL_CIRC
 
-#define WHEEL_CIRC          1
+#define WHEEL_CIRC          20.42
 
 // Motor control pins. You need to adjust these till
 // Alex moves in the correct direction
@@ -31,8 +41,15 @@
 
 // Store the ticks from Alex's left and
 // right encoders.
-volatile unsigned long leftTicks; 
-volatile unsigned long rightTicks;
+volatile unsigned long leftForwardTicks; 
+volatile unsigned long rightForwardTicks;
+volatile unsigned long leftReverseTicks; 
+volatile unsigned long rightReverseTicks;
+
+volatile unsigned long leftForwardTicksTurns; 
+volatile unsigned long rightForwardTicksTurns;
+volatile unsigned long leftReverseTicksTurns; 
+volatile unsigned long rightReverseTicksTurns;
 
 // Store the revolutions on Alex's left
 // and right wheels
@@ -88,6 +105,14 @@ void sendMessage(const char *message)
   messagePacket.packetType=PACKET_TYPE_MESSAGE;
   strncpy(messagePacket.data, message, MAX_STR_LEN);
   sendResponse(&messagePacket);
+}
+
+void dbprint(char *format){
+  va_list args;
+  char buffer[128];
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  sendMessage(buffer);
 }
 
 void sendBadPacket()
@@ -179,16 +204,24 @@ ISR(INT1_vect){
 // Functions to be called by INT0 and INT1 ISRs.
 void leftISR()
 {
-  leftTicks++;
-  Serial.print("LEFT: ");
-  Serial.println(leftTicks);
+  if(dir == FORWARD){
+    leftForwardTicks++;
+  }else if(dir == BACKWARD){
+    leftReverseTicks++;
+  }
+  leftRevs = (leftForwardTicks - leftReverseTicks) / COUNTS_PER_REV;
+  forwardDist = ((leftForwardTicks - leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
 }
 
 void rightISR()
 {
-  rightTicks++;
-  Serial.print("RIGHT: ");
-  Serial.println(rightTicks);
+  if(dir == FORWARD){
+    rightForwardTicks++;
+  }else if(dir == BACKWARD){
+    rightReverseTicks++;
+  }
+  rightRevs = (rightForwardTicks - rightReverseTicks) / COUNTS_PER_REV;
+  forwardDist = ((rightForwardTicks - rightReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;  
 }
 
 // Set up the external interrupt pins INT0 and INT1
@@ -302,6 +335,7 @@ int pwmVal(float speed)
 // continue moving forward indefinitely.
 void forward(float dist, float speed)
 {
+  dir = FORWARD;
   int val = pwmVal(speed);
 
   // For now we will ignore dist and move
@@ -325,7 +359,7 @@ void forward(float dist, float speed)
 // continue reversing indefinitely.
 void reverse(float dist, float speed)
 {
-
+  dir = BACKWARD;
   int val = pwmVal(speed);
 
   // For now we will ignore dist and 
@@ -348,6 +382,7 @@ void reverse(float dist, float speed)
 // turn left indefinitely.
 void left(float ang, float speed)
 {
+  dir = LEFT;
   int val = pwmVal(speed);
 
   // For now we will ignore ang. We will fix this in Week 9.
@@ -367,8 +402,8 @@ void left(float ang, float speed)
 // turn right indefinitely.
 void right(float ang, float speed)
 {
+  dir = RIGHT;
   int val = pwmVal(speed);
-
   // For now we will ignore ang. We will fix this in Week 9.
   // We will also replace this code with bare-metal later.
   // To turn right we reverse the right wheel and move
@@ -382,6 +417,7 @@ void right(float ang, float speed)
 // Stop Alex. To replace with bare-metal code later.
 void stop()
 {
+  dir = STOP;
   analogWrite(LF, 0);
   analogWrite(LR, 0);
   analogWrite(RF, 0);
@@ -396,8 +432,14 @@ void stop()
 // Clears all our counters
 void clearCounters()
 {
-  leftTicks=0;
-  rightTicks=0;
+  leftForwardTicks = 0;
+  leftReverseTicks = 0;
+  leftForwardTicksTurns = 0;
+  leftReverseTicksTurns = 0;
+  rightForwardTicks = 0;
+  rightReverseTicks = 0;
+  rightForwardTicksTurns = 0;
+  rightReverseTicksTurns = 0;
   leftRevs=0;
   rightRevs=0;
   forwardDist=0;
@@ -407,36 +449,7 @@ void clearCounters()
 // Clears one particular counter
 void clearOneCounter(int which)
 {
-  switch(which)
-  {
-    case 0:
-      clearCounters();
-      break;
-
-    case 1:
-      leftTicks=0;
-      break;
-
-    case 2:
-      rightTicks=0;
-      break;
-
-    case 3:
-      leftRevs=0;
-      break;
-
-    case 4:
-      rightRevs=0;
-      break;
-
-    case 5:
-      forwardDist=0;
-      break;
-
-    case 6:
-      reverseDist=0;
-      break;
-  }
+  clearCounters;
 }
 // Intialize Vincet's internal states
 
@@ -541,8 +554,7 @@ void handlePacket(TPacket *packet)
 void loop() {
 
 // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
-
-// forward(0, 100);
+  forward(0, 100);
 
 // Uncomment the code below for Week 9 Studio 2
 
