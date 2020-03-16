@@ -212,10 +212,8 @@ void leftISR()
     reverseDist = ((float)(leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }else if(dir == LEFT){
     leftReverseTicks++;
-    reverseDist = ((float)(leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }else if(dir == RIGHT){
     leftForwardTicks++;
-    forwardDist = ((float)(leftForwardTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }
 }
 
@@ -229,10 +227,8 @@ void rightISR()
     reverseDist = ((float)(rightReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }else if(dir == RIGHT){
     leftReverseTicks++;
-    reverseDist = ((float)(leftReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }else if(dir == LEFT){
     leftForwardTicks++;
-    forwardDist = ((float)(leftForwardTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }
 }
 
