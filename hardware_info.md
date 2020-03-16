@@ -26,4 +26,4 @@
 
 **pin10** BIN1
 
-**pin11** BIN2
+**pin9** BIN2
