@@ -226,9 +226,9 @@ void rightISR()
     rightReverseTicks++;
     reverseDist = ((float)(rightReverseTicks) * WHEEL_CIRC) / COUNTS_PER_REV;
   }else if(dir == RIGHT){
-    leftReverseTicks++;
+    rightReverseTicks++;
   }else if(dir == LEFT){
-    leftForwardTicks++;
+    rightForwardTicks++;
   }
 }
 
@@ -472,8 +472,24 @@ void handleCommand(TPacket *command)
   {
     // For movement commands, param[0] = distance, param[1] = speed.
     case COMMAND_FORWARD:
-        sendOK();
-        forward((float) command->params[0], (float) command->params[1]);
+      sendOK();
+      forward((float) command->params[0], (float) command->params[1]);
+      break;
+    case COMMAND_REVERSE:
+      sendOK();
+      reverse((float) command->params[0], (float) command->params[1]);
+      break;
+    case COMMAND_TURN_LEFT:
+      sendOK();
+      left((float) command->params[0], (float) command->params[1]);
+      break;
+    case COMMAND_TURN_RIGHT:
+      sendOK();
+      right((float) command->params[0], (float) command->params[1]);
+      break;
+    case COMMAND_STOP:
+      sendOK();
+      stop();
       break;
 
     /*
