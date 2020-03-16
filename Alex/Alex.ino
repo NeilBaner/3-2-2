@@ -32,7 +32,7 @@ typedef enum {
 #define LF 6   // Left forward pin
 #define LR 5   // Left reverse pin
 #define RF 10  // Right forward pin
-#define RR 9  // Right reverse pin
+#define RR 9   // Right reverse pin
 
 /*
  *    Alex's State Variables
@@ -181,7 +181,6 @@ void enablePullups() {
     PORTD |= 0b00001100;
 }
 
-
 // Functions to be called by INT0 and INT1 ISRs.
 void leftISR() {
     if (dir == FORWARD) {
@@ -228,13 +227,13 @@ ISR(INT1_vect) { rightISR(); }
  * Setup and start codes for serial communications
  *
  */
-// Set up the serial connection. 
+// Set up the serial connection.
 void setupSerial() {
     // To replace later with bare-metal.
     Serial.begin(9600);
 }
 
-// Start the serial connection. 
+// Start the serial connection.
 
 void startSerial() {
     // Empty for now. To be replaced with bare-metal code
@@ -261,7 +260,7 @@ void writeSerial(const char *buffer, int len) { Serial.write(buffer, len); }
  *
  */
 
-// Set up Alex's motors. 
+// Set up Alex's motors.
 void setupMotors() {
     /* Our motor set up is:
      *    A1IN - Pin 5, PD5, OC0B
@@ -269,13 +268,15 @@ void setupMotors() {
      *    B1IN - Pin 10, PB2, OC1B
      *    B2In - pIN 9, PB3, OC1A
      */
-    TCCR0A = 0b10100001; // Set OC0A and OC0B at BOTTOM, clear at OCR0x, use PC PWM from 0 to 0xFF
-    TIMSK0 = 0b00000000; // No interrupts
-    OCR0A = 0; // Start with these set to 0
-    OCR0B = 0; 
+    TCCR0A = 0b10100001;  // Set OC0A and OC0B at BOTTOM, clear at OCR0x, use PC
+                          // PWM from 0 to 0xFF
+    TIMSK0 = 0b00000000;  // No interrupts
+    OCR0A = 0;            // Start with these set to 0
+    OCR0B = 0;
     TCNT0 = 0;
-    TCCR1A = 0b10100001; // Set OC1A and OC1B at BOTTOM, clear at OCR1x, use PC PWM from 0 to 0xFF (8-bit mode)
-    TIMSK1 = 0b00000000; // No interrupts
+    TCCR1A = 0b10100001;  // Set OC1A and OC1B at BOTTOM, clear at OCR1x, use PC
+                          // PWM from 0 to 0xFF (8-bit mode)
+    TIMSK1 = 0b00000000;  // No interrupts
     OCR1A = 0;
     OCR1B = 0;
     TCNT1 = 0;
@@ -283,8 +284,8 @@ void setupMotors() {
 
 // Start the PWM for Alex's motors.
 void startMotors() {
-    TCCR0B = 0b00000011; // Prescalar 1/64
-    TCCR1B = 0b00000011; // Prescalar 1/64
+    TCCR0B = 0b00000011;  // Prescalar 1/64
+    TCCR1B = 0b00000011;  // Prescalar 1/64
 }
 
 // Convert percentages to PWM values
@@ -304,19 +305,14 @@ int pwmVal(float speed) {
 void forward(float dist, float speed) {
     dir = FORWARD;
     int val = pwmVal(speed);
-
-    // For now we will ignore dist and move
-    // forward indefinitely. We will fix this
-    // in Week 9.
-
-    // analogWrite(LF, val);
-    // analogWrite(RF, val);
-    // analogWrite(LR, 0);
-    // analogWrite(RR, 0);
-    OC0B = val;
-    OC1B = val;
-    OC0A = 0;
-    OC1A = 0;
+    int distDesired = forwardDist + dist;
+    while (forwardDist < distDesired) {
+        OC0B = val;
+        OC1B = val;
+        OC0A = 0;
+        OC1A = 0;
+    }
+    stop();
 }
 
 // Reverse Alex "dist" cm at speed "speed".
@@ -327,14 +323,14 @@ void forward(float dist, float speed) {
 void reverse(float dist, float speed) {
     dir = BACKWARD;
     int val = pwmVal(speed);
-
-    // For now we will ignore dist and
-    // reverse indefinitely. We will fix this
-    // in Week 9.
-    OC0A = val;
-    OC1A = val;
-    OC0B = 0;
-    OC1B = 0;
+    int distDesired = reverseDist + dist;
+    while (reverseDist < distDesired) {
+        OC0A = val;
+        OC1A = val;
+        OC0B = 0;
+        OC1B = 0;
+    }
+    stop();
 }
 
 // Turn Alex left "ang" degrees at speed "speed".
@@ -510,6 +506,8 @@ void loop() {
       TResult result = readPacket(&recvPacket);
       
 
+
+
       if(result == PACKET_OK)
         handlePacket(&recvPacket);
       else
@@ -523,6 +521,8 @@ void loop() {
             sendBadChecksum();
           }
           
+
+
 
           */
 }
