@@ -23,6 +23,12 @@ typedef enum {
 // Wheel circumference in cm.
 #define WHEEL_CIRC 20.42
 
+#define PI 3.141592654
+
+// TODO: measure Alex
+#define ALEX_LENGTH 16
+#define ALEX_WIDTH 6
+
 // Motor control pins. You need to adjust these till
 // Alex moves in the correct direction
 #define LF 6   // Left forward pin
@@ -99,7 +105,6 @@ void sendStatus() {
     status.params[9] = reverseDist;
     status.params[10] = angle;
     sendResponse(&status);
-    delete status;
 }
 
 void sendMessage(const char *message) {
@@ -111,7 +116,7 @@ void sendMessage(const char *message) {
     sendResponse(&messagePacket);
 }
 
-void dbprint(char *format) {
+void dbprint(char *format, ...) {
     va_list args;
     char buffer[128];
     va_start(args, format);
@@ -399,6 +404,7 @@ void clearOneCounter(int which) { clearCounters; }
 
 void initializeState() { clearCounters(); }
 
+// TODO: complete with telemetry functions
 void handleCommand(TPacket *command) {
     switch (command->command) {
         // For movement commands, param[0] = distance, param[1] = speed.
@@ -421,6 +427,13 @@ void handleCommand(TPacket *command) {
         case COMMAND_STOP:
             sendOK();
             stop();
+            break;
+        case COMMAND_GET_STATS:
+            sendOK();
+            
+            break;
+        case COMMAND_CLEAR_STATS:
+            sendOK();
             break;
         default:
             sendBadCommand();
