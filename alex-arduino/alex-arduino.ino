@@ -404,7 +404,7 @@ void clearOneCounter(int which) { clearCounters; }
 
 void initializeState() { clearCounters(); }
 
-// TODO: complete with telemetry functions
+
 void handleCommand(TPacket *command) {
     switch (command->command) {
         // For movement commands, param[0] = distance, param[1] = speed.
@@ -428,12 +428,12 @@ void handleCommand(TPacket *command) {
             sendOK();
             stop();
             break;
-        case COMMAND_GET_STATS:
-            sendOK();
-            
-            break;
         case COMMAND_CLEAR_STATS:
             sendOK();
+            clearOneCounter(command->params[0]);
+        case COMMAND_GET_STATS:
+            sendOK();
+            sendStatus();
             break;
         default:
             sendBadCommand();
