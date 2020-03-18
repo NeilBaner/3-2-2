@@ -2,12 +2,12 @@
 
 ## Members
 
-* Lee Hao Yuan [@lhydl](https://github.com/lhydl)
+* Lee Hao Yuan [@lhydl](@lhydl)
 
-* Mooi Suet Yeng, Francene [@chuckiex3](github.com/chuckiex3)
+* Mooi Suet Yeng, Francene [@chuckiex3](@chuckiex3)
 
-* Neil Banerjee (me!) [@neilbaner](github.com/neilbaner)
+* Neil Banerjee (me!) [@neilbaner](@neilbaner)
 
-* Prachi Goenka [@prachi2023](github.com/prachi2023)
+* Prachi Goenka [@prachi2023](@prachi2023)
 
-* Shreyas Kumar [@shreytheshreyas](github.com/shreytheshreyas)
+* Shreyas Kumar [@shreytheshreyas](@shreytheshreyas)
