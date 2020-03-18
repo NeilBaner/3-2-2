@@ -4,7 +4,7 @@
 
 * Lee Hao Yuan [@lhydl](github.com/lhydl)
 
-* Mooi Suet Yeng, Francene [@chuckiex3](github.com/chickiex3)
+* Mooi Suet Yeng, Francene [@chuckiex3](github.com/chuckiex3)
 
 * Neil Banerjee (me!) [@neilbaner](github.com/neilbaner)
 
