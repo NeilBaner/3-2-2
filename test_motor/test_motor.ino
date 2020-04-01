@@ -9,8 +9,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  analogWrite(9, 255);
-  analogWrite(10, 0);
-  analogWrite(5, 255);
-  analogWrite(6, 0);
+  analogWrite(9, HIGH);
+  analogWrite(10, LOW);
+  analogWrite(5, HIGH);
+  analogWrite(6, LOW);
 }
