@@ -286,6 +286,9 @@ void setupMotors() {
     OCR1A = 0;
     OCR1B = 0;
     TCNT1 = 0;
+
+    DDRD |= 0b01100000;
+    DDRB |= 0b00000110;
 }
 
 // Start the PWM for Alex's motors.
