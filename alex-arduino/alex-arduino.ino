@@ -400,7 +400,7 @@ void clearCounters() {
 }
 
 // Clears one particular counter
-void clearOneCounter(int which) { clearCounters; }
+void clearOneCounter(int which) { clearCounters()   ; }
 
 void initializeState() { clearCounters(); }
 
@@ -431,6 +431,7 @@ void handleCommand(TPacket *command) {
         case COMMAND_CLEAR_STATS:
             sendOK();
             clearOneCounter(command->params[0]);
+            break;
         case COMMAND_GET_STATS:
             sendOK();
             sendStatus();
@@ -476,6 +477,7 @@ void setup() {
     sei();
 }
 
+//TODO: figure this stuff out too apparently
 void handlePacket(TPacket *packet) {
     switch (packet->packetType) {
         case PACKET_TYPE_COMMAND:
@@ -497,7 +499,7 @@ void handlePacket(TPacket *packet) {
 }
 
 void loop() {
-    forward(0, 100);
+    // forward(0, 100);
     // Uncomment the code below for Week 9 Studio 2
 
     /*
