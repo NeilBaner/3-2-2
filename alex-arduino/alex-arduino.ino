@@ -286,6 +286,9 @@ void setupMotors() {
     OCR1A = 0;
     OCR1B = 0;
     TCNT1 = 0;
+
+    DDRD |= 0b01100000;
+    DDRB |= 0b00000110;
 }
 
 // Start the PWM for Alex's motors.
@@ -344,14 +347,19 @@ void reverse(float dist, float speed) {
 // turn left at half speed.
 // Specifying an angle of 0 degrees will cause Alex to
 // turn left indefinitely.
-// TODO: Implement angle
 void left(float ang, float speed) {
+    float alex_circ = PI * ALEX_WIDTH;
+    int alex_circ_ticks = (alex_circ / WHEEL_CIRC) * COUNTS_PER_REV;
     dir = LEFT;
     int val = pwmVal(speed);
-    OCR0B = val;
-    OCR1A = val;
-    OCR0A = 0;
-    OCR1B = 0;
+    int leftInit = leftReverseTicksTurns, rightInit = rightForwardTicksTurns;
+    while((leftInit + (ang * alex_circ_ticks / 360) < leftReverseTicksTurns && rightInit + (ang * alex_circ_ticks / 360) < rightForwardTicksTurns) || ang == 0){
+        OCR0B = val;
+        OCR1A = val;
+        OCR0A = 0;
+        OCR1B = 0;
+    }
+    stop();
 }
 
 // Turn Alex right "ang" degrees at speed "speed".
@@ -359,14 +367,19 @@ void left(float ang, float speed) {
 // turn left at half speed.
 // Specifying an angle of 0 degrees will cause Alex to
 // turn right indefinitely.
-// TODO: Implement angle
 void right(float ang, float speed) {
+    float alex_circ = PI * ALEX_WIDTH;
+    int alex_circ_ticks = (alex_circ / WHEEL_CIRC) * COUNTS_PER_REV;
     dir = RIGHT;
-    int val = pwmVal(speed);
-    OCR0A = val;
-    OCR1B = val;
-    OCR0B = 0;
-    OCR1A = 0;
+    int val = pwmVal(speed);    
+    int leftInit = leftForwardTicksTurns, rightInit = rightReverseTicksTurns;
+    while((leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns && rightInit + (ang * alex_circ_ticks / 360) < rightReverseTicksTurns) || ang == 0){
+        OCR0A = val;
+        OCR1B = val;
+        OCR0B = 0;
+        OCR1A = 0;
+    }
+    stop();
 }
 
 // Stop Alex. 
@@ -400,7 +413,7 @@ void clearCounters() {
 }
 
 // Clears one particular counter
-void clearOneCounter(int which) { clearCounters; }
+void clearOneCounter(int which) { clearCounters()   ; }
 
 void initializeState() { clearCounters(); }
 
@@ -431,6 +444,7 @@ void handleCommand(TPacket *command) {
         case COMMAND_CLEAR_STATS:
             sendOK();
             clearOneCounter(command->params[0]);
+            break;
         case COMMAND_GET_STATS:
             sendOK();
             sendStatus();
@@ -476,6 +490,7 @@ void setup() {
     sei();
 }
 
+//TODO: figure this stuff out too apparently
 void handlePacket(TPacket *packet) {
     switch (packet->packetType) {
         case PACKET_TYPE_COMMAND:
@@ -497,7 +512,7 @@ void handlePacket(TPacket *packet) {
 }
 
 void loop() {
-    forward(0, 100);
+    // forward(0, 100);
     // Uncomment the code below for Week 9 Studio 2
 
     /*
