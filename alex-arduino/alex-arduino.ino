@@ -321,7 +321,7 @@ void forward(float dist, float speed) {
         OCR0A = 0;
         OCR1A = 0;
     }
-    stop();
+    stopAlex();
 }
 
 // Reverse Alex "dist" cm at speed "speed".
@@ -339,7 +339,7 @@ void reverse(float dist, float speed) {
         OCR0B = 0;
         OCR1B = 0;
     }
-    stop();
+    stopAlex();
 }
 
 // Turn Alex left "ang" degrees at speed "speed".
@@ -359,7 +359,7 @@ void left(float ang, float speed) {
         OCR0A = 0;
         OCR1B = 0;
     }
-    stop();
+    stopAlex();
 }
 
 // Turn Alex right "ang" degrees at speed "speed".
@@ -379,11 +379,11 @@ void right(float ang, float speed) {
         OCR0B = 0;
         OCR1A = 0;
     }
-    stop();
+    stopAlex();
 }
 
-// Stop Alex. 
-void stop() {
+// stopAlex Alex. 
+void stopAlex() {
     dir = STOP;
     OCR0A = 0;
     OCR0B = 0;
@@ -439,7 +439,7 @@ void handleCommand(TPacket *command) {
             break;
         case COMMAND_STOP:
             sendOK();
-            stop();
+            stopAlex();
             break;
         case COMMAND_CLEAR_STATS:
             sendOK();
@@ -512,6 +512,9 @@ void handlePacket(TPacket *packet) {
 }
 
 void loop() {
+  //forward(0, 100);
+  delay(1000);
+  stopAlex();
     // forward(0, 100);
     // Uncomment the code below for Week 9 Studio 2
 

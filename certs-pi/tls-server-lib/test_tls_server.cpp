@@ -7,7 +7,7 @@
 #define KEY_FNAME   "alex.key"
 #define CERT_FNAME  "alex.crt"
 #define CA_CERT_FNAME   "signing.pem"
-#define CLIENT_NAME     "laptop.epp.com"
+#define CLIENT_NAME     "192.168.1.200"
 
 
 // We are making an echo server. So we
