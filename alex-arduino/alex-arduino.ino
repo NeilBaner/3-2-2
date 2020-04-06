@@ -240,20 +240,28 @@ ISR(INT1_vect) { rightISR(); }
 // Set up the serial connection.
 // TODO: Convert to bare-metal
 void setupSerial() {
-    Serial.begin(9600);
+    UCSR0C = 0b00000110;
+    UBRR0 = 103;
+    UCSR0A = 0b00000000;
 }
 
 // Start the serial connection.
 // TODO: Implement
 void startSerial() {
+    UCSR0B = 0b00011000;
 }
 
 // Read the serial port. Returns the read character in
 // ch if available. Also returns TRUE if ch is valid.
 // TODO: Convert to bare-metal
 int readSerial(char *buffer) {
+    // int count = 0;
+    // while (Serial.available()) buffer[count++] = Serial.read();
+    // return count;
     int count = 0;
-    while (Serial.available()) buffer[count++] = Serial.read();
+    while (UCSR0A & 0b10000000 == 0b10000000){
+        buffer[count++] = UDR0;
+    }
     return count;
 }
 
