@@ -1,4 +1,5 @@
 certs-pi/alex.key
 certs-laptop/laptop.key
+certs-laptop/signing.key
 
 .vscode/
