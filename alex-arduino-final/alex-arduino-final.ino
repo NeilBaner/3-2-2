@@ -1,6 +1,6 @@
+#include <math.h>
 #include <serialize.h>
 #include <stdarg.h>
-#include <math.h>
 
 #include "constants.h"
 #include "packet.h"
@@ -27,65 +27,65 @@ volatile unsigned long deltaTicks, newTicks;
 
 volatile TDirection dir = STOP;
 
-
 // SETUP ROUTINES
 
 // INT0+INT1 enabled, FE triggered
-void setupEINT(){
+void setupEINT() {
     EICRA = 0b00001010;
     EIMSK = 0b00000011;
 }
 
 // Setup serial comms, 9600 bps, 8N1, polling-based
-void setupSerial(){
+void setupSerial() {
     UCSR0C = 0b00000110;
     UBRR0 = 103;
     UCSR0A = 0b00000000;
 }
 
 // Start Serial comms
-void startSerial(){
-    UCSR0B = 0b00011000;
-}
+void startSerial() { UCSR0B = 0b00011000; }
 
 // Setup timers 0 and 1 for PWM
-void setupMotors(){
+void setupMotors() {
     /* Our motor set up is:
      *    A1IN - Pin 5, PD5, OC0B
      *    A2IN - Pin 6, PD6, OC0A
      *    B1IN - Pin 10, PB2, OC1B
      *    B2In - pIN 9, PB3, OC1A
      */
-    TCCR0A = 0b10100001;  // Clear OC0X counting up, set counting down, PC PWM 0x00 to 0xFF
+    TCCR0A = 0b10100001;  // Clear OC0X counting up, set counting down, PC PWM
+                          // 0x00 to 0xFF
     TIMSK0 = 0b00000000;  // No interrupts
-    OCR0A = 0;            
+    OCR0A = 0;
     OCR0B = 0;
     TCNT0 = 0;
 
-    TCCR1A = 0b10100001;  // Clear OC1X counting up, set counting down, PC PWM 0x000 to 0x0FF
+    TCCR1A = 0b10100001;  // Clear OC1X counting up, set counting down, PC PWM
+                          // 0x000 to 0x0FF
     TIMSK1 = 0b00000000;  // No interrupts
     OCR1A = 0;
     OCR1B = 0;
     TCNT1 = 0;
 
-    DDRD |= 0b01100000; 
+    DDRD |= 0b01100000;
     DDRB |= 0b00000110;
 }
 
 // Start the timers and PWM
-void startMotors(){
+void startMotors() {
     TCCR0B = 0b00000011;  // Prescalar 1/64
     TCCR1B = 0b00000011;  // Prescalar 1/64
 }
 
 // Enable internal pull up resistors on the interrupt pins
-void enablePullups(){
+void enablePullups() {
     DDRD &= 0b11110011;
     PORTD |= 0b00001100;
 }
 
-void initialiseState(){
-    
+void initialiseState() {
+    clearCounters();
+    stopAlex();
 }
 
 // Clears all counters
@@ -104,8 +104,8 @@ void clearCounters() {
     reverseDist = 0;
 }
 
-void clearCounters(int which){
-    switch(which){
+void clearCounters(int which) {
+    switch (which) {
         case 0:
             leftForwardTicks = 0;
             break;
@@ -147,28 +147,23 @@ void clearCounters(int which){
     }
 }
 
-
-
-
 // ISRs
 
-ISR(INT0_vect){
-    leftISR();
-}
+ISR(INT0_vect) { leftISR(); }
 
-ISR(INT1_vect){
-    rightISR();
-}
+ISR(INT1_vect) { rightISR(); }
 
-void leftISR(){
-    switch(dir){
+void leftISR() {
+    switch (dir) {
         case FORWARD:
             leftForwardTicks++;
-            forwardDist = ((double)(leftForwardTicks) * PI * WHEEL_DIAMETER) / (double)COUNTS_PER_REV;
+            forwardDist = ((double)(leftForwardTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
             break;
         case BACKWARD:
             leftReverseTicks++;
-            reverseDist = ((double)(leftReverseTicks) * PI * WHEEL_DIAMETER) / (double)COUNTS_PER_REV;
+            reverseDist = ((double)(leftReverseTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
             break;
         case LEFT:
             leftReverseTicksTurns++;
@@ -179,15 +174,17 @@ void leftISR(){
     }
 }
 
-void rightISR(){
-    switch(dir){
+void rightISR() {
+    switch (dir) {
         case FORWARD:
             rightForwardTicks++;
-            forwardDist = ((double)(rightForwardTicks) * PI * WHEEL_DIAMETER) / (double)COUNTS_PER_REV;
+            forwardDist = ((double)(rightForwardTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
             break;
         case BACKWARD:
             rightReverseTicks++;
-            reverseDist = ((double)(rightReverseTicks) * PI * WHEEL_DIAMETER) / (double)COUNTS_PER_REV;
+            reverseDist = ((double)(rightReverseTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
             break;
         case LEFT:
             rightForwardTicksTurns++;
@@ -198,28 +195,27 @@ void rightISR(){
     }
 }
 
-
-
-
-
 // MOVEMENT ROUTINES
 
 // Convert percentages to PWM values
 int pwmVal(float speed) {
-    if (speed < 0.0) speed = 0;
+    if (speed < 0.0)
+        speed = 0;
 
-    if (speed > 100.0) speed = 100.0;
+    if (speed > 100.0)
+        speed = 100.0;
 
     return (int)((speed / 100.0) * 255.0);
 }
 
-// Move Alex forwards "dist" cm at speed "speed"%. When dist = 0, Alex goes indefinitely.
+// Move Alex forwards "dist" cm at speed "speed"%. When dist = 0, Alex goes
+// indefinitely.
 void forward(float dist, float speed) {
     dir = FORWARD;
     int val = pwmVal(speed);
-    if(dist > 0){
+    if (dist > 0) {
         deltaDist = dist;
-    }else{
+    } else {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
@@ -229,13 +225,14 @@ void forward(float dist, float speed) {
     OCR1A = 0;
 }
 
-// Reverse Alex "dist" cm at speed "speed"%. When dist = 0, Alex reverses indefinitely.
+// Reverse Alex "dist" cm at speed "speed"%. When dist = 0, Alex reverses
+// indefinitely.
 void reverse(float dist, float speed) {
     dir = BACKWARD;
     int val = pwmVal(speed);
-    if(dist > 0){
+    if (dist > 0) {
         deltaDist = dist;
-    }else{
+    } else {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
@@ -245,14 +242,18 @@ void reverse(float dist, float speed) {
     OCR1B = 0;
 }
 
-// Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns indefinitely
+// Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns
+// indefinitely
 void left(float ang, float speed) {
     float alex_circ = PI * ALEX_WIDTH;
     int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
     dir = LEFT;
     int val = pwmVal(speed);
     int leftInit = leftReverseTicksTurns, rightInit = rightForwardTicksTurns;
-    while((leftInit + (ang * alex_circ_ticks / 360) < leftReverseTicksTurns && rightInit + (ang * alex_circ_ticks / 360) < rightForwardTicksTurns) || ang == 0){
+    while (
+        (leftInit + (ang * alex_circ_ticks / 360) < leftReverseTicksTurns &&
+         rightInit + (ang * alex_circ_ticks / 360) < rightForwardTicksTurns) ||
+        ang == 0) {
         OCR0B = val;
         OCR1A = val;
         OCR0A = 0;
@@ -261,14 +262,18 @@ void left(float ang, float speed) {
     stopAlex();
 }
 
-// Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns indefinitely
+// Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns
+// indefinitely
 void right(float ang, float speed) {
     float alex_circ = PI * ALEX_WIDTH;
     int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
     dir = RIGHT;
-    int val = pwmVal(speed);    
+    int val = pwmVal(speed);
     int leftInit = leftForwardTicksTurns, rightInit = rightReverseTicksTurns;
-    while((leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns && rightInit + (ang * alex_circ_ticks / 360) < rightReverseTicksTurns) || ang == 0){
+    while (
+        (leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns &&
+         rightInit + (ang * alex_circ_ticks / 360) < rightReverseTicksTurns) ||
+        ang == 0) {
         OCR0A = val;
         OCR1B = val;
         OCR0B = 0;
@@ -277,7 +282,7 @@ void right(float ang, float speed) {
     stopAlex();
 }
 
-// stop Alex, no comment. 
+// stop Alex, no comment.
 void stopAlex() {
     dir = STOP;
     OCR0A = 0;
@@ -288,24 +293,23 @@ void stopAlex() {
     deltaDist = 0;
 }
 
-
-
-
 // SERIAL ROUTINES
 
-int readSerial(char* buffer){
+int readSerial(char *buffer) {
     int count = 0;
-    while (UCSR0A & 0b10000000 == 0b10000000){
+    while (UCSR0A & 0b00100000 == 0);
+    while (UCSR0A & 0b10000000 == 0b10000000) {
         buffer[count++] = UDR0;
     }
     return count;
 }
 
-void writeSerial(const char *buffer, int len){
+void writeSerial(const char *buffer, int len) {
     int count = 0;
-    while(count < len){
-        while(UCSR0A & 0b0010000 == 0);
+    while (count < len) {
+        while (UCSR0A & 0b0010000 == 0);
         UDR0 = buffer[0];
+        count++;
     }
 }
 // COMMUNICATION ROUTINES
@@ -326,8 +330,6 @@ void dbprint(char *format, ...) {
     vsprintf(buffer, format, args);
     sendMessage(buffer);
 }
-
-
 
 void sendBadChecksum() {
     // Tell the Pi that it sent us a packet with a bad
@@ -496,7 +498,7 @@ void waitForHello() {
 
 // TEST ROUTINES
 
-void testMovements(){
+void testMovements() {
     forward(100, 100);
     stopAlex();
     reverse(50, 100);
@@ -506,11 +508,9 @@ void testMovements(){
     stopAlex();
 }
 
-void testCommunications(){
+void testCommunications() {}
 
-}
-
-void setup(){
+void setup() {
     cli();
     setupEINT();
     setupSerial();
@@ -522,34 +522,32 @@ void setup(){
     sei();
 }
 
-void loop(){
-    if(deltaDist > 0){
-        switch(dir){
+void loop() {
+    if (deltaDist > 0) {
+        switch (dir) {
             case FORWARD:
-                if(forwardDist >= newDist){
+                if (forwardDist >= newDist) {
                     stopAlex();
                 }
                 break;
             case BACKWARD:
-                if(reverseDist >= newDist){
+                if (reverseDist >= newDist) {
                     stopAlex();
                 }
         }
     }
-    if(dir == STOP){
+    if (dir == STOP) {
         stopAlex();
     }
-    TPacket recvPacket; // This holds commands from the Pi
+    TPacket recvPacket;  // This holds commands from the Pi
     TResult result = readPacket(&recvPacket);
-    if(result == PACKET_OK){
-      forward(10, 50);
+    if (result == PACKET_OK) {
+        forward(10, 50);
         handlePacket(&recvPacket);
-    }
-    else if(result == PACKET_BAD){
-            forward(10, 50);
+    } else if (result == PACKET_BAD) {
+        forward(10, 50);
         sendBadPacket();
-    }
-    else if(result == PACKET_CHECKSUM_BAD){
+    } else if (result == PACKET_CHECKSUM_BAD) {
         sendBadChecksum();
     }
 }
