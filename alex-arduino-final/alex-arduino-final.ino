@@ -1,5 +1,6 @@
 #include <serialize.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "constants.h"
 #include "packet.h"
@@ -20,6 +21,9 @@ volatile unsigned long leftReverseTicksTurns, rightReverseTicksTurns;
 volatile unsigned long leftRevs, rightRevs;
 
 volatile unsigned long forwardDist, reverseDist;
+
+volatile unsigned long deltaDist, newDist;
+volatile unsigned long deltaTicks, newTicks;
 
 volatile TDirection dir = STOP;
 
@@ -213,28 +217,32 @@ int pwmVal(float speed) {
 void forward(float dist, float speed) {
     dir = FORWARD;
     int val = pwmVal(speed);
-    int distDesired = forwardDist + dist;
-    while (forwardDist < distDesired || dist == 0) {
-        OCR0B = val;
-        OCR1B = val;
-        OCR0A = 0;
-        OCR1A = 0;
+    if(dist > 0){
+        deltaDist = dist;
+    }else{
+        deltaDist = 999999;
     }
-    stopAlex();
+    newDist = forwardDist + deltaDist;
+    OCR0B = val;
+    OCR1B = val;
+    OCR0A = 0;
+    OCR1A = 0;
 }
 
 // Reverse Alex "dist" cm at speed "speed"%. When dist = 0, Alex reverses indefinitely.
 void reverse(float dist, float speed) {
     dir = BACKWARD;
     int val = pwmVal(speed);
-    int distDesired = reverseDist + dist;
-    while (reverseDist < distDesired || dist == 0) {
-        OCR0A = val;
-        OCR1A = val;
-        OCR0B = 0;
-        OCR1B = 0;
+    if(dist > 0){
+        deltaDist = dist;
+    }else{
+        deltaDist = 999999;
     }
-    stopAlex();
+    newDist = forwardDist + deltaDist;
+    OCR0A = val;
+    OCR1A = val;
+    OCR0B = 0;
+    OCR1B = 0;
 }
 
 // Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns indefinitely
@@ -276,6 +284,8 @@ void stopAlex() {
     OCR0B = 0;
     OCR1A = 0;
     OCR1B = 0;
+    newDist = 0;
+    deltaDist = 0;
 }
 
 
@@ -367,9 +377,7 @@ void sendResponse(TPacket *packet) {
     // Takes a packet, serializes it then sends it out
     // over the serial port.
     char buffer[PACKET_SIZE];
-    int len;
-
-    len = serialize(buffer, packet, sizeof(TPacket));
+    int len = serialize(buffer, packet, sizeof(TPacket));
     writeSerial(buffer, len);
 }
 
@@ -423,5 +431,20 @@ void setup(){
 }
 
 void loop(){
-    testMovements();
+    if(deltaDist > 0){
+        switch(dir){
+            case FORWARD:
+                if(forwardDist >= newDist){
+                    stopAlex();
+                }
+                break;
+            case BACKWARD:
+                if(reverseDist >= newDist){
+                    stopAlex();
+                }
+        }
+    }
+    if(dir == STOP){
+        stopAlex();
+    }
 }
