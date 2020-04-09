@@ -42,5 +42,7 @@ typedef enum
   COMMAND_GET_STATS = 5,
   COMMAND_CLEAR_STATS = 6
 } TCommandType;
+
+
 #endif
 

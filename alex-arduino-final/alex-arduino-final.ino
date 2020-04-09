@@ -9,7 +9,7 @@
 
 #define COUNTS_PER_REV 192
 
-#define WHEEL_DIAMETER 65
+#define WHEEL_DIAMETER 6.5
 #define ALEX_LENGTH 16
 #define ALEX_WIDTH 6
 
@@ -248,7 +248,7 @@ void reverse(float dist, float speed) {
 // Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns indefinitely
 void left(float ang, float speed) {
     float alex_circ = PI * ALEX_WIDTH;
-    int alex_circ_ticks = (alex_circ / WHEEL_CIRC) * COUNTS_PER_REV;
+    int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
     dir = LEFT;
     int val = pwmVal(speed);
     int leftInit = leftReverseTicksTurns, rightInit = rightForwardTicksTurns;
@@ -264,7 +264,7 @@ void left(float ang, float speed) {
 // Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns indefinitely
 void right(float ang, float speed) {
     float alex_circ = PI * ALEX_WIDTH;
-    int alex_circ_ticks = (alex_circ / WHEEL_CIRC) * COUNTS_PER_REV;
+    int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
     dir = RIGHT;
     int val = pwmVal(speed);    
     int leftInit = leftForwardTicksTurns, rightInit = rightReverseTicksTurns;
@@ -293,7 +293,7 @@ void stopAlex() {
 
 // SERIAL ROUTINES
 
-int readSerial(){
+int readSerial(char* buffer){
     int count = 0;
     while (UCSR0A & 0b10000000 == 0b10000000){
         buffer[count++] = UDR0;
@@ -398,9 +398,101 @@ void sendStatus() {
     sendResponse(&status);
 }
 
+TResult readPacket(TPacket *packet) {
+    // Reads in data from the serial port and
+    // deserializes it.Returns deserialized
+    // data in "packet".
 
+    char buffer[PACKET_SIZE];
+    int len;
 
+    len = readSerial(buffer);
 
+    if (len == 0)
+        return PACKET_INCOMPLETE;
+    else
+        return deserialize(buffer, len, packet);
+}
+
+void handlePacket(TPacket *packet) {
+    switch (packet->packetType) {
+        case PACKET_TYPE_COMMAND:
+            handleCommand(packet);
+            break;
+
+        case PACKET_TYPE_RESPONSE:
+            break;
+
+        case PACKET_TYPE_ERROR:
+            break;
+
+        case PACKET_TYPE_MESSAGE:
+            break;
+
+        case PACKET_TYPE_HELLO:
+            break;
+    }
+}
+
+void handleCommand(TPacket *command) {
+    switch (command->command) {
+        // For movement commands, param[0] = distance, param[1] = speed.
+        case COMMAND_FORWARD:
+            sendOK();
+            forward((float)command->params[0], (float)command->params[1]);
+            break;
+        case COMMAND_REVERSE:
+            sendOK();
+            reverse((float)command->params[0], (float)command->params[1]);
+            break;
+        case COMMAND_TURN_LEFT:
+            sendOK();
+            left((float)command->params[0], (float)command->params[1]);
+            break;
+        case COMMAND_TURN_RIGHT:
+            sendOK();
+            right((float)command->params[0], (float)command->params[1]);
+            break;
+        case COMMAND_STOP:
+            sendOK();
+            stopAlex();
+            break;
+        case COMMAND_CLEAR_STATS:
+            sendOK();
+            clearCounters(command->params[0]);
+            break;
+        case COMMAND_GET_STATS:
+            sendOK();
+            sendStatus();
+            break;
+        default:
+            sendBadCommand();
+    }
+}
+
+void waitForHello() {
+    int exit = 0;
+
+    while (!exit) {
+        TPacket hello;
+        TResult result;
+
+        do {
+            result = readPacket(&hello);
+        } while (result == PACKET_INCOMPLETE);
+
+        if (result == PACKET_OK) {
+            if (hello.packetType == PACKET_TYPE_HELLO) {
+                sendOK();
+                exit = 1;
+            } else
+                sendBadResponse();
+        } else if (result == PACKET_BAD) {
+            sendBadPacket();
+        } else if (result == PACKET_CHECKSUM_BAD)
+            sendBadChecksum();
+    }  // !exit
+}
 
 // TEST ROUTINES
 
@@ -446,5 +538,18 @@ void loop(){
     }
     if(dir == STOP){
         stopAlex();
+    }
+    TPacket recvPacket; // This holds commands from the Pi
+    TResult result = readPacket(&recvPacket);
+    if(result == PACKET_OK){
+      forward(10, 50);
+        handlePacket(&recvPacket);
+    }
+    else if(result == PACKET_BAD){
+            forward(10, 50);
+        sendBadPacket();
+    }
+    else if(result == PACKET_CHECKSUM_BAD){
+        sendBadChecksum();
     }
 }

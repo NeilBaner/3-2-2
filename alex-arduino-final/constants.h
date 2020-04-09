@@ -42,5 +42,14 @@ typedef enum
   COMMAND_GET_STATS = 5,
   COMMAND_CLEAR_STATS = 6
 } TCommandType;
+
+
+typedef enum {
+    STOP = 0,
+    FORWARD = 1,
+    BACKWARD = 2,
+    LEFT = 3,
+    RIGHT = 4
+} TDirection;
 #endif
 

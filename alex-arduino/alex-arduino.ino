@@ -496,6 +496,7 @@ void setup() {
     enablePullups();
     initializeState();
     sei();
+    waitForHello();
 }
 
 //TODO: figure this stuff out too apparently
@@ -526,7 +527,7 @@ void loop() {
     // forward(0, 100);
     // Uncomment the code below for Week 9 Studio 2
 
-    /*
+    
      // put your main code here, to run repeatedly:
       TPacket recvPacket; // This holds commands from the Pi
 
@@ -551,5 +552,5 @@ void loop() {
 
 
 
-          */
+          
 }
