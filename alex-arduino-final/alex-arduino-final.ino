@@ -229,8 +229,8 @@ void forward(float dist, float speed) {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
-    OCR0B = val;
-    OCR1B = val;
+    OCR0B = (int)((float)val * leftForwardMultiplier);
+    OCR1B = (int)((float)val * rightForwardMultiplier);
     OCR0A = 0;
     OCR1A = 0;
 }
@@ -246,8 +246,8 @@ void reverse(float dist, float speed) {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
-    OCR0A = val;
-    OCR1A = val;
+    OCR0A = (int)((float)val * leftReverseMultiplier);
+    OCR1A = (int)((float)val * rightReverseMultiplier);
     OCR0B = 0;
     OCR1B = 0;
 }
