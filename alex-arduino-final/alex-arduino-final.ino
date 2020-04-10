@@ -89,10 +89,10 @@ void enablePullups() {
 
 void initialiseState() {
     clearCounters();
-    leftForwardMultiplier = 0;
-    rightForwardMultiplier = 0;
-    leftReverseMultiplier = 0;
-    rightReverseMultiplier = 0;
+    leftForwardMultiplier = 1.0;
+    rightForwardMultiplier = 1.0;
+    leftReverseMultiplier = 1.0;
+    rightReverseMultiplier = 1.0;
     stopAlex();
 }
 
