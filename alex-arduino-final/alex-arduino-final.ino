@@ -296,6 +296,16 @@ void stopAlex() {
 // SERIAL ROUTINES
 
 int readSerial(char *buffer) {
+    int count;
+    for(count = 0; count < MAX_DATA_SIZE; count++){
+        while(UCSR0A & 0b10000000 == 0);
+        buffer[count] = UDR0;
+    }
+    return count;
+}
+
+
+int readSerialOld(char *buffer) {
     int count = 0;
     while (UCSR0A & 0b00100000 == 0);
     while (UCSR0A & 0b10000000 == 0b10000000) {
