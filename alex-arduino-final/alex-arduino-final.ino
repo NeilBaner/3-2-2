@@ -18,6 +18,9 @@ volatile unsigned long leftReverseTicks, rightReverseTicks;
 volatile unsigned long leftForwardTicksTurns, rightForwardTicksTurns;
 volatile unsigned long leftReverseTicksTurns, rightReverseTicksTurns;
 
+volatile float leftForwardMultiplier, rightForwardMultiplier;
+volatile float leftReverseMultiplier, rightReverseMultiplier;
+
 volatile unsigned long leftRevs, rightRevs;
 
 volatile unsigned long forwardDist, reverseDist;
@@ -86,6 +89,10 @@ void enablePullups() {
 
 void initialiseState() {
     clearCounters();
+    leftForwardMultiplier = 0;
+    rightForwardMultiplier = 0;
+    leftReverseMultiplier = 0;
+    rightReverseMultiplier = 0;
     stopAlex();
 }
 
