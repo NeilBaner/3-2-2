@@ -29,6 +29,7 @@ volatile TDirection dir = STOP;
 
 // SETUP ROUTINES
 
+
 // INT0+INT1 enabled, FE triggered
 void setupEINT() {
     EICRA = 0b00001010;
@@ -178,19 +179,21 @@ void rightISR() {
     switch (dir) {
         case FORWARD:
             rightForwardTicks++;
-            forwardDist = ((double)(rightForwardTicks)*PI * WHEEL_DIAMETER) /
+            forwardDist = ((double)(rightForwardTicks-5)*PI * WHEEL_DIAMETER) /
                           (double)COUNTS_PER_REV;
             break;
         case BACKWARD:
             rightReverseTicks++;
-            reverseDist = ((double)(rightReverseTicks)*PI * WHEEL_DIAMETER) /
+            reverseDist = ((double)(rightReverseTicks-5)*PI * WHEEL_DIAMETER) /
                           (double)COUNTS_PER_REV;
             break;
         case LEFT:
             rightForwardTicksTurns++;
+            rightForwardTicksTurns = rightForwardTicksTurns  - 5; //added
             break;
         case RIGHT:
             rightReverseTicksTurns++;
+            rightForwardTicksTurns = rightForwardTicksTurns  - 5; //added
             break;
     }
 }
