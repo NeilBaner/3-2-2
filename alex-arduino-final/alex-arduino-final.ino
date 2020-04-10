@@ -297,7 +297,7 @@ void stopAlex() {
 
 int readSerial(char *buffer) {
     int count;
-    for(count = 0; count < MAX_DATA_SIZE; count++){
+    for(count = 0; count < PACKET_SIZE; count++){
         while(UCSR0A & 0b10000000 == 0);
         buffer[count] = UDR0;
     }
