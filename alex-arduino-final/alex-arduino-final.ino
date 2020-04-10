@@ -296,10 +296,10 @@ void stopAlex() {
 // SERIAL ROUTINES
 
 int readSerial(char *buffer) {
-    int count;
-    for(count = 0; count < PACKET_SIZE; count++){
+    int count = 0;
+    while(count < PACKET_SIZE){
         while(UCSR0A & 0b10000000 == 0);
-        buffer[count] = UDR0;
+        buffer[count++] = UDR0;
     }
     return count;
 }
@@ -530,6 +530,7 @@ void setup() {
     enablePullups();
     initialiseState();
     sei();
+    waitForHello();
 }
 
 void loop() {
@@ -552,10 +553,8 @@ void loop() {
     TPacket recvPacket;  // This holds commands from the Pi
     TResult result = readPacket(&recvPacket);
     if (result == PACKET_OK) {
-        forward(10, 50);
         handlePacket(&recvPacket);
     } else if (result == PACKET_BAD) {
-        forward(10, 50);
         sendBadPacket();
     } else if (result == PACKET_CHECKSUM_BAD) {
         sendBadChecksum();
