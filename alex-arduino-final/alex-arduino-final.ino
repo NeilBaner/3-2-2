@@ -1,7 +1,7 @@
 #include <math.h>
 #include <serialize.h>
 #include <stdarg.h>
-
+#include <avr/sleep.h>
 #include "constants.h"
 #include "packet.h"
 
@@ -12,6 +12,15 @@
 #define WHEEL_DIAMETER 6.5
 #define ALEX_LENGTH 16
 #define ALEX_WIDTH 6
+#define PRR_TWI_MASK 0b10000000
+#define PRR_SPI_MASK 0b00000100
+#define ADCSRA_ADC_MASK 0b10000000
+#define PRR_ADC_MASK 0b00000001
+#define PRR_TIMER2_MASK 0b01000000
+#define PRR_TIMER0_MASK 0b00100000
+#define PRR_TIMER1_MASK 0b00001000
+#define SMCR_SLEEP_ENABLE_MASK 0b00000001
+#define SMCR_STANDBY_MODE_MASK 0b11111100 //110 for standby, last bit is the sleep enable bit
 
 volatile unsigned long leftForwardTicks, rightForwardTicks;
 volatile unsigned long leftReverseTicks, rightReverseTicks;
@@ -498,18 +507,22 @@ void handleCommand(TPacket *command) {
     case COMMAND_FORWARD:
       sendOK();
       forward((float)command->params[0], (float)command->params[1]);
+      SMCR = 00001100; //clear the enable sleep bit immediately after waking up?
       break;
     case COMMAND_REVERSE:
       sendOK();
       reverse((float)command->params[0], (float)command->params[1]);
+      SMCR = 00001100; //clear the sleep bit immediately after waking up?
       break;
     case COMMAND_TURN_LEFT:
       sendOK();
       left((float)command->params[0], (float)command->params[1]);
+      SMCR = 00001100; //clear the sleep bit immediately after waking up?
       break;
     case COMMAND_TURN_RIGHT:
       sendOK();
       right((float)command->params[0], (float)command->params[1]);
+      SMCR = 00001100; //clear the sleep bit immediately after waking up?
       break;
     case COMMAND_STOP:
       sendOK();
@@ -552,6 +565,60 @@ void waitForHello() {
   }  // !exit
 }
 
+// POWER SAVING ROUTINES
+void WDT_off(void)
+{
+  /* Global interrupt should be turned OFF here if not
+    already done so */
+  /* Clear WDRF in MCUSR */
+  MCUSR &= ~(1 << WDRF);
+  /* Write logical one to WDCE and WDE */
+  /* Keep old prescaler setting to prevent unintentional
+    time-out */
+  WDTCSR |= (1 << WDCE) | (1 << WDE);
+  /* Turn off WDT */
+  WDTCSR = 0x00;
+}
+
+/* Global interrupt should be turned ON here if
+  subsequent operations after calling this function do
+  not require turning off global interrupt */
+void setupPowerSaving()
+{
+  // Turn off the Watchdog Timer
+  WDT_off();
+  // Modify PRR to shut down TWI
+  PRR |= PRR_TWI_MASK;
+  // Modify PRR to shut down SPI
+  PRR |= PRR_SPI_MASK;
+  // Modify ADCSRA to disable ADC,
+  PRR |= ADCSRA_ADC_MASK;
+  // then modify PRR to shut down ADC
+  PRR |= PRR_ADC_MASK;
+  // Set the SMCR to choose the STANDBY sleep mode
+  SMCR |= SMCR_STANDBY_MODE_MASK; // we want 00001100
+  // Do not set the Sleep Enable (SE) bit yet
+  // Set Port B Pin 5 as output pin, then write a logic LOW
+  DRRB |= 0b00100000;
+  PORTD |= 0b00000000;
+  // to it so that the LED tied to Arduino's Pin 13 is OFF.
+}
+
+void putArduinoToStandby()
+{
+  // Modify PRR to shut down TIMER 0, 1, and 2 
+  PRR |= 0b01101000;
+  // Modify SE bit in SMCR to enable (i.e., allow) sleep
+  SMCR |= SLEEP_ENABLE_MASK;
+  // The following function puts ATmega328P’s MCU into sleep;
+  // it wakes up from sleep when USART serial data arrives
+  sleep_cpu();
+  // Modify SE bit in SMCR to disable (i.e., disallow) sleep
+  SMCR &= SMCR_STANDBY_MODE_MASK;
+  // Modify PRR to power up TIMER 0, 1, and 2
+  PRR &= 0b0;
+}
+
 // TEST ROUTINES
 
 void testMovements() {
@@ -577,6 +644,7 @@ void setup() {
   initialiseState();
   sei();
   waitForHello();
+  setupPowerSaving();
 }
 
 void loop() {
@@ -595,6 +663,7 @@ void loop() {
   }
   if (dir == STOP) {
     stopAlex();
+    putArduinoToStandby();
   }
   TPacket recvPacket;  // This holds commands from the Pi
   TResult result = readPacket(&recvPacket);
