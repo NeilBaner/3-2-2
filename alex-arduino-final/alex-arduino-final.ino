@@ -172,7 +172,7 @@ void leftISR() {
     case FORWARD:
       leftForwardTicks++;
       if (leftForwardTicks > rightForwardTicks) {
-        leftForwardMultiplier = 0.85;  
+        leftForwardMultiplier = 0.85;
         leftReverseMultiplier = 0;
       }
       forwardDist = ((double)(leftForwardTicks) * PI * WHEEL_DIAMETER) /
@@ -198,7 +198,7 @@ void leftISR() {
       leftForwardTicksTurns++;
       if (leftForwardTicks > rightReverseTicks) {
         rightReverseMultiplier = 0.85; // does it need correction?
-        rightForwardTicks = 0;    
+        rightForwardTicks = 0;
       }
       break;
   }
@@ -212,7 +212,7 @@ void rightISR() {
                     (double)COUNTS_PER_REV;
       if (rightForwardTicks > leftForwardTicks) {
         rightReverseMultiplier = 0;
-        rightForwardMultiplier = 0.85;  //actually... why not rightForwardTicks = leftForwardTicks? 
+        rightForwardMultiplier = 0.85;  //actually... why not rightForwardTicks = leftForwardTicks?
       }
       break;
     case BACKWARD:
@@ -220,21 +220,21 @@ void rightISR() {
       reverseDist = ((double)(rightReverseTicks - 5) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
       if (rightReverseTicks > leftReverseTicks) {
-        rightReverseMultiplier = 0.85;  
-        rightForwardMultiplier = 0; 
+        rightReverseMultiplier = 0.85;
+        rightForwardMultiplier = 0;
       }
       break;
     case LEFT:
       rightForwardTicksTurns++;
       if (leftReverseTicks > rightForwardTicks) {
         leftForwardMultiplier = 0.85;
-        leftReverseMultiplier = 0;  
+        leftReverseMultiplier = 0;
       }
       break;
     case RIGHT:
       rightReverseTicksTurns++;
       if (leftForwardTicks > rightReverseTicks) {
-        leftForwardMultiplier = 0.85;  
+        leftForwardMultiplier = 0.85;
         leftReverseMultiplier = 0;
       }
       break;
@@ -265,9 +265,8 @@ void forward(float dist, float speed) {
     deltaDist = 999999;
   }
   newDist = forwardDist + deltaDist;
-  
-  OCR0B = (leftReverseMultiplier + leftForwardMultiplier) * val;
-  OCR1B = (rightReverseMultiplier + rightForwardMultiplier) * val;
+  OCR0B = (int)((float)val * leftForwardMultiplier);
+  OCR1B = (int)((float)val * rightForwardMultiplier);
   OCR0A = 0;
   OCR1A = 0;
 }
@@ -283,11 +282,8 @@ void reverse(float dist, float speed) {
     deltaDist = 999999;
   }
   newDist = forwardDist + deltaDist;
-  if (leftReverseTicks > rightReverseTicks) {
-    leftReverseTicks = 0.85 * leftReverseTicks;
-  }
-  OCR0A = (leftReverseMultiplier + leftForwardMultiplier) * val;
-  OCR1A = (rightReverseMultiplier + rightForwardMultiplier) * val;
+  OCR0A = (int)((float)val * leftReverseMultiplier);
+  OCR1A = (int)((float)val * rightReverseMultiplier);
   OCR0B = 0;
   OCR1B = 0;
 }
