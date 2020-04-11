@@ -300,8 +300,8 @@ void left(float ang, float speed) {
     (leftInit + (ang * alex_circ_ticks / 360) < leftReverseTicksTurns &&
      rightInit + (ang * alex_circ_ticks / 360) < rightForwardTicksTurns) ||
     ang == 0) {
-    OCR0B = (leftReverseMultiplier + leftForwardMultiplier) * val;
-    OCR1A = (rightReverseMultiplier + rightForwardMultiplier) * val;
+    OCR0B = val;
+    OCR1A = val;
     OCR0A = 0;
     OCR1B = 0;
   }
@@ -320,8 +320,8 @@ void right(float ang, float speed) {
     (leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns &&
      rightInit + (ang * alex_circ_ticks / 360) < rightReverseTicksTurns) ||
     ang == 0) {
-    OCR0A = (leftReverseMultiplier + leftForwardMultiplier) * val;
-    OCR1B = (rightReverseMultiplier + rightForwardMultiplier) * val;
+    OCR0A = val;
+    OCR1B = val;
     OCR0B = 0;
     OCR1A = 0;
   }
