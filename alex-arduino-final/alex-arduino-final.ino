@@ -92,6 +92,13 @@ void startMotors() {
   TCCR1B = 0b00000011;  // Prescalar 1/64
 }
 
+void setUpTimer () {
+  TCCR0A = 0b00000010; // set to CTC mode
+  TCCR2B = 0b00000100; // Prescalar 1/64
+  OCR2B = 156;
+  TIMSK2 = 0b00000000; // No interrupts
+}
+
 // Enable internal pull up resistors on the interrupt pins
 void enablePullups() {
   DDRD &= 0b11110011;
@@ -180,35 +187,28 @@ void leftISR() {
   switch (dir) {
     case FORWARD:
       leftForwardTicks++;
-      if (leftForwardTicks > rightForwardTicks) {
-        leftForwardMultiplier = 0.85;
-        leftReverseMultiplier = 0;
-      }
       forwardDist = ((double)(leftForwardTicks) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
+      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightForwardTicks;);
+      leftReverseMultiplier = 0;
+
       break;
     case BACKWARD:
       leftReverseTicks++;
       reverseDist = ((double)(leftReverseTicks) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      if (leftReverseTicks > rightReverseTicks) {
-        leftReverseMultiplier = 0.85;
-        leftForwardMultiplier = 0;
-      }
+      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightReverseTicks);
+      leftForwardMultiplier = 0;
       break;
     case LEFT:
       leftReverseTicksTurns++;
-      if (leftReverseTicks > rightForwardTicks) {
-        leftReverseMultiplier = 0.85; // tbh i'm not sure if this needs correction?
-        leftForwardMultiplier = 0;
-      }
+      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightForwardTicks); // tbh i'm not sure if this needs correction?
+      leftForwardMultiplier = 0;
       break;
     case RIGHT:
       leftForwardTicksTurns++;
-      if (leftForwardTicks > rightReverseTicks) {
-        rightReverseMultiplier = 0.85; // does it need correction?
-        rightForwardTicks = 0;
-      }
+      rightReverseMultiplier = 1 - 0.1 * (leftForwardTicks - leftForwardTicks); // does it need correction?
+      rightForwardTicks = 0;
       break;
   }
 }
@@ -219,33 +219,27 @@ void rightISR() {
       rightForwardTicks++;
       forwardDist = ((double)(rightForwardTicks - 5) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      if (rightForwardTicks > leftForwardTicks) {
-        rightReverseMultiplier = 0;
-        rightForwardMultiplier = 0.85;  //actually... why not rightForwardTicks = leftForwardTicks?
-      }
+      rightReverseMultiplier = 0;
+      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftForwardTicks); //actually... why not rightForwardTicks = leftForwardTicks?
+
       break;
     case BACKWARD:
       rightReverseTicks++;
       reverseDist = ((double)(rightReverseTicks - 5) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      if (rightReverseTicks > leftReverseTicks) {
-        rightReverseMultiplier = 0.85;
-        rightForwardMultiplier = 0;
-      }
+      rightForwardMultiplier = 0;
+      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftReverseTicks);
+
       break;
     case LEFT:
       rightForwardTicksTurns++;
-      if (leftReverseTicks > rightForwardTicks) {
-        leftForwardMultiplier = 0.85;
-        leftReverseMultiplier = 0;
-      }
+      leftForwardMultiplier = 1 - 0.1 * (leftReverseTicks - rightForwardTicks);
+      leftReverseMultiplier = 0;
       break;
     case RIGHT:
       rightReverseTicksTurns++;
-      if (leftForwardTicks > rightReverseTicks) {
-        leftForwardMultiplier = 0.85;
-        leftReverseMultiplier = 0;
-      }
+      leftForwardMultiplier = 1 - 0.1(leftForwardTicks - rightReverseTicks);
+      leftReverseMultiplier = 0;
       break;
   }
 }
@@ -588,13 +582,13 @@ void setupPowerSaving()
   // Turn off the Watchdog Timer
   WDT_off();
   /*// Modify PRR to shut down TWI
-  PRR |= PRR_TWI_MASK;
-  // Modify PRR to shut down SPI
-  PRR |= PRR_SPI_MASK;
-  // Modify ADCSRA to disable ADC,
-  PRR |= ADCSRA_ADC_MASK;
-  // then modify PRR to shut down ADC
-  PRR |= PRR_ADC_MASK; */
+    PRR |= PRR_TWI_MASK;
+    // Modify PRR to shut down SPI
+    PRR |= PRR_SPI_MASK;
+    // Modify ADCSRA to disable ADC,
+    PRR |= ADCSRA_ADC_MASK;
+    // then modify PRR to shut down ADC
+    PRR |= PRR_ADC_MASK; */
   // Set the SMCR to choose the STANDBY sleep mode
   SMCR |= SMCR_STANDBY_MODE_MASK; // we want 00001100
   // Do not set the Sleep Enable (SE) bit yet
@@ -603,7 +597,7 @@ void setupPowerSaving()
 void putArduinoToStandby()
 {
   // called when the motors are stopped
-  // Modify PRR to shut down TIMER 0, 1, and 2 
+  // Modify PRR to shut down TIMER 0, 1, and 2
   PRR |= 0b01101000;
   // Modify PRR to shut down TWI
   PRR |= PRR_TWI_MASK;
