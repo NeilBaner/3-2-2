@@ -36,6 +36,7 @@ volatile unsigned long forwardDist, reverseDist;
 
 volatile unsigned long deltaDist, newDist;
 volatile unsigned long deltaTicks, newTicks;
+volatile unsigned long initialSpeed;
 
 volatile TDirection dir = STOP;
 
@@ -184,6 +185,8 @@ ISR(INT1_vect) {
 }
 
 void leftISR() {
+  leftForwardMultiplier = 0;
+  leftReverseMultiplier = 0;
   switch (dir) {
     case FORWARD:
       leftForwardTicks++;
@@ -207,13 +210,17 @@ void leftISR() {
       break;
     case RIGHT:
       leftForwardTicksTurns++;
-      rightReverseMultiplier = 1 - 0.1 * (leftForwardTicks - leftForwardTicks); // does it need correction?
-      rightForwardTicks = 0;
+      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightReverseTicks); // does it need correction?
+      leftReverseTicks = 0;
       break;
   }
+  OCR0B = pwmVal(initialSpeed * leftForwardMultiplier);
+  OCR0A = pwmVal(initialSpeed * leftReverseMultiplier);
 }
 
 void rightISR() {
+  rightForwardMultiplier = 0;
+  rightReverseMultiplier = 0;
   switch (dir) {
     case FORWARD:
       rightForwardTicks++;
@@ -229,19 +236,21 @@ void rightISR() {
                     (double)COUNTS_PER_REV;
       rightForwardMultiplier = 0;
       rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftReverseTicks);
-
       break;
     case LEFT:
       rightForwardTicksTurns++;
-      leftForwardMultiplier = 1 - 0.1 * (leftReverseTicks - rightForwardTicks);
-      leftReverseMultiplier = 0;
+      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftReverseTicks);
+      rightReverseMultiplier = 0;
       break;
     case RIGHT:
       rightReverseTicksTurns++;
-      leftForwardMultiplier = 1 - 0.1(leftForwardTicks - rightReverseTicks);
-      leftReverseMultiplier = 0;
+      rightReverseMultiplier = 1 - 0.1(rightReverseTicks - leftForwardTicks);
+      rightForwardMultiplier = 0;
       break;
   }
+  OCR1B = pwmVal(initialSpeed * rightForwardMultiplier);
+  OCR1A = pwmVal(initialSpeed * rightReverseMultiplier);
+
 }
 
 // MOVEMENT ROUTINES
@@ -261,6 +270,7 @@ int pwmVal(float speed) {
 // indefinitely.
 void forward(float dist, float speed) {
   dir = FORWARD;
+  int initialSpeed = speed;
   int val = pwmVal(speed);
   if (dist > 0) {
     deltaDist = dist;
@@ -268,8 +278,8 @@ void forward(float dist, float speed) {
     deltaDist = 999999;
   }
   newDist = forwardDist + deltaDist;
-  OCR0B = (int)((float)val * leftForwardMultiplier);
-  OCR1B = (int)((float)val * rightForwardMultiplier);
+  OCR0B = val;
+  OCR1B = val;
   OCR0A = 0;
   OCR1A = 0;
 }
@@ -278,6 +288,7 @@ void forward(float dist, float speed) {
 // indefinitely.
 void reverse(float dist, float speed) {
   dir = BACKWARD;
+  int initialSpeed = speed;
   int val = pwmVal(speed);
   if (dist > 0) {
     deltaDist = dist;
@@ -285,8 +296,8 @@ void reverse(float dist, float speed) {
     deltaDist = 999999;
   }
   newDist = forwardDist + deltaDist;
-  OCR0A = (int)((float)val * leftReverseMultiplier);
-  OCR1A = (int)((float)val * rightReverseMultiplier);
+  OCR0A = val;
+  OCR1A = val;
   OCR0B = 0;
   OCR1B = 0;
 }
@@ -297,6 +308,7 @@ void left(float ang, float speed) {
   float alex_circ = PI * ALEX_WIDTH;
   int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
   dir = LEFT;
+  int initialSpeed = speed;
   int val = pwmVal(speed);
   int leftInit = leftReverseTicksTurns, rightInit = rightForwardTicksTurns;
   while (
@@ -318,6 +330,7 @@ void right(float ang, float speed) {
   int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
   dir = RIGHT;
   int val = pwmVal(speed);
+  int initialSpeed = speed;
   int leftInit = leftForwardTicksTurns, rightInit = rightReverseTicksTurns;
   while (
     (leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns &&
