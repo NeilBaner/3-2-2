@@ -51,14 +51,12 @@ void setupEINT() {
 
 // Setup serial comms, 9600 bps, 8N1, polling-based
 void setupSerial() {
-  UCSR0C = 0b00000110;
-  UBRR0 = 103;
-  UCSR0A = 0b00000000;
+  Serial.begin(9600);
 }
 
 // Start Serial comms
 void startSerial() {
-  UCSR0B = 0b00011000;
+  
 }
 
 // Setup timers 0 and 1 for PWM
@@ -359,8 +357,8 @@ void stopAlex() {
 
 int readSerial(char *buffer){
   int count = 0;
-  while (UCSR0A & 0b10000000 == 0b10000000) {
-    buffer[count++] = UDR0;
+  while (Serial.available()) {
+    buffer[count++] = Serial.read();
   }
   return count;
 }
@@ -385,11 +383,7 @@ int readSerial(char *buffer){
 //}
 
 void writeSerial(const char *buffer, int len) {
-  int count = 0;
-  while (count < len) {
-    while (UCSR0A & 0b0010000 == 0);
-    UDR0 = buffer[count++];
-  }
+  Serial.write(buffer, len);
 }
 
 
@@ -570,7 +564,7 @@ void waitForHello() {
     do {
       result = readPacket(&hello);
     } while (result == PACKET_INCOMPLETE);
-    forward(10, 100);
+    //forward(10, 100);
     if (result == PACKET_OK) {
       if (hello.packetType == PACKET_TYPE_HELLO) {
         sendOK();
@@ -668,7 +662,7 @@ void setup() {
   enablePullups();
   initialiseState();
   sei();
-  waitForHello();
+  //waitForHello();
   //setupPowerSaving();
 }
 
