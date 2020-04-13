@@ -192,7 +192,7 @@ void leftISR() {
       leftForwardTicks++;
       forwardDist = ((double)(leftForwardTicks) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightForwardTicks;);
+      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightForwardTicks);
       leftReverseMultiplier = 0;
 
       break;
@@ -244,7 +244,7 @@ void rightISR() {
       break;
     case RIGHT:
       rightReverseTicksTurns++;
-      rightReverseMultiplier = 1 - 0.1(rightReverseTicks - leftForwardTicks);
+      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftForwardTicks);
       rightForwardMultiplier = 0;
       break;
   }
@@ -357,7 +357,7 @@ void stopAlex() {
 
 // SERIAL ROUTINES
 
-int readSerial(){
+int readSerial(char *buffer){
   int count = 0;
   while (UCSR0A & 0b10000000 == 0b10000000) {
     buffer[count++] = UDR0;
@@ -365,24 +365,24 @@ int readSerial(){
   return count;
 }
 
-int readSerialLessOld(char *buffer) {
-  int count = 0;
-  while (count < PACKET_SIZE) {
-    while (UCSR0A & 0b10000000 == 0);
-    buffer[count++] = UDR0;
-  }
-  return count;
-}
-
-
-int readSerialOld(char *buffer) {
-  int count = 0;
-  while (UCSR0A & 0b00100000 == 0);
-  while (UCSR0A & 0b10000000 == 0b10000000) {
-    buffer[count++] = UDR0;
-  }
-  return count;
-}
+//int readSerialLessOld(char *buffer) {
+//  int count = 0;
+//  while (count < PACKET_SIZE) {
+//    while (UCSR0A & 0b10000000 == 0);
+//    buffer[count++] = UDR0;
+//  }
+//  return count;
+//}
+//
+//
+//int readSerialOld(char *buffer) {
+//  int count = 0;
+//  while (UCSR0A & 0b00100000 == 0);
+//  while (UCSR0A & 0b10000000 == 0b10000000) {
+//    buffer[count++] = UDR0;
+//  }
+//  return count;
+//}
 
 void writeSerial(const char *buffer, int len) {
   int count = 0;
@@ -391,6 +391,10 @@ void writeSerial(const char *buffer, int len) {
     UDR0 = buffer[count++];
   }
 }
+
+
+
+
 // COMMUNICATION ROUTINES
 
 void sendMessage(const char *message) {
@@ -558,7 +562,7 @@ void handleCommand(TPacket *command) {
 
 void waitForHello() {
   int exit = 0;
-
+  
   while (!exit) {
     TPacket hello;
     TResult result;
@@ -566,10 +570,11 @@ void waitForHello() {
     do {
       result = readPacket(&hello);
     } while (result == PACKET_INCOMPLETE);
-
+    forward(10, 100);
     if (result == PACKET_OK) {
       if (hello.packetType == PACKET_TYPE_HELLO) {
         sendOK();
+        
         exit = 1;
       } else
         sendBadResponse();
@@ -664,7 +669,7 @@ void setup() {
   initialiseState();
   sei();
   waitForHello();
-  setupPowerSaving();
+  //setupPowerSaving();
 }
 
 void loop() {
