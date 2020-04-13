@@ -92,7 +92,7 @@ void startMotors() {
 }
 
 // Setup Timer 2 for the "PID"
-void setUpTimer2() {
+void setupTimer2() {
     TCCR2A = 0b00000010;  // set to CTC mode
     OCR2A = 156;
     TIMSK2 = 0b00000010;  // Interrupt on Compare Match w/OCR2A
@@ -326,7 +326,6 @@ int pwmVal(float speed) {
 // indefinitely.
 void forward(float dist, float speed) {
     dir = FORWARD;
-    int initialSpeed = speed;
     int val = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
@@ -334,8 +333,8 @@ void forward(float dist, float speed) {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
-    OCR0B = leftMultiplier * val;
-    OCR1B = val;
+    OCR0B = leftForwardMultiplier * val;
+    OCR1B = rightForwardMultiplier * val;
     OCR0A = 0;
     OCR1A = 0;
 }
@@ -344,14 +343,13 @@ void forward(float dist, float speed) {
 // indefinitely.
 void reverse(float dist, float speed) {
     dir = BACKWARD;
-    int initialSpeed = speed;
     int val = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
     } else {
         deltaDist = 999999;
     }
-    newDist = forwardDist + deltaDist;
+    newDist = reverseDist + deltaDist;
     OCR0A = val;
     OCR1A = val;
     OCR0B = 0;
@@ -713,6 +711,8 @@ void setup() {
     startSerial();
     setupMotors();
     startMotors();
+    setupTimer2();
+    startTimer2();
     enablePullups();
     initialiseState();
     sei();
