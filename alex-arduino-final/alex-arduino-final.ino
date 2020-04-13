@@ -95,7 +95,8 @@ void startMotors() {
 // Setup Timer 2 for the "PID"
 void setupTimer2() {
     TCCR2A = 0b00000010;  // set to CTC mode
-    OCR2A = 156;
+    OCR2A = 50;
+    // 156 was the Prachi value
     TIMSK2 = 0b00000010;  // Interrupt on Compare Match w/OCR2A
 }
 
@@ -194,78 +195,49 @@ ISR(INT1_vect) { rightISR(); }
 ISR(TIMER2_COMPA_vect) { pidISR(); }
 
 void leftISR() {
-    //  leftForwardMultiplier = 0;
-    //  leftReverseMultiplier = 0;
     switch (dir) {
         case FORWARD:
             leftForwardTicks++;
             forwardDist = ((double)(leftForwardTicks)*PI * WHEEL_DIAMETER) /
                           (double)COUNTS_PER_REV;
-            //      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks -
-            //      rightForwardTicks); leftReverseMultiplier = 0;
 
             break;
         case BACKWARD:
             leftReverseTicks++;
             reverseDist = ((double)(leftReverseTicks)*PI * WHEEL_DIAMETER) /
                           (double)COUNTS_PER_REV;
-            //      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks -
-            //      rightReverseTicks); leftForwardMultiplier = 0;
             break;
         case LEFT:
             leftReverseTicksTurns++;
-            //      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks -
-            //      rightForwardTicks); // tbh i'm not sure if this needs
-            //      correction? leftForwardMultiplier = 0;
             break;
         case RIGHT:
             leftForwardTicksTurns++;
-            //      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks -
-            //      rightReverseTicks); // does it need correction?
-            //      leftReverseTicks = 0;
             break;
     }
-    //  OCR0B = pwmVal(initialSpeed * leftForwardMultiplier);
-    //  OCR0A = pwmVal(initialSpeed * leftReverseMultiplier);
 }
 
 void rightISR() {
-    //  rightForwardMultiplier = 0;
-    //  rightReverseMultiplier = 0;
     switch (dir) {
         case FORWARD:
             rightForwardTicks++;
             forwardDist =
-                ((double)(rightForwardTicks - 5) * PI * WHEEL_DIAMETER) /
+                ((double)(rightForwardTicks) * PI * WHEEL_DIAMETER) /
                 (double)COUNTS_PER_REV;
-            //      rightReverseMultiplier = 0;
-            //      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks -
-            //      leftForwardTicks); //actually... why not rightForwardTicks =
-            //      leftForwardTicks?
 
             break;
         case BACKWARD:
             rightReverseTicks++;
             reverseDist =
-                ((double)(rightReverseTicks - 5) * PI * WHEEL_DIAMETER) /
+                ((double)(rightReverseTicks) * PI * WHEEL_DIAMETER) /
                 (double)COUNTS_PER_REV;
-            //      rightForwardMultiplier = 0;
-            //      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks -
-            //      leftReverseTicks);
             break;
         case LEFT:
             rightForwardTicksTurns++;
-            //      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks -
-            //      leftReverseTicks); rightReverseMultiplier = 0;
             break;
         case RIGHT:
             rightReverseTicksTurns++;
-            //      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks -
-            //      leftForwardTicks); rightForwardMultiplier = 0;
             break;
     }
-    //  OCR1B = pwmVal(initialSpeed * rightForwardMultiplier);
-    //  OCR1A = pwmVal(initialSpeed * rightReverseMultiplier);
 }
 
 void pidISR() {
@@ -287,8 +259,8 @@ void pidISR() {
                     leftForwardMultiplier += 0.01;
                 }
             }
-            OCR0B = speedToGo * leftForwardMultiplier;
-            OCR1B = speedToGo * rightForwardMultiplier;
+            OCR0B = PWMSpeed * leftForwardMultiplier;
+            OCR1B = PWMSpeed * rightForwardMultiplier;
             break;
         case BACKWARD:
             leftDist = leftReverseTicks - leftReverseTicksPrevious;
@@ -306,7 +278,7 @@ void pidISR() {
                     leftReverseMultiplier += 0.01;
                 }
             }
-            OCR0A = speedToGo * leftReverseMultiplier;
+            OCR0A = PWMSpeed * leftReverseMultiplier;
             OCR1A = PWMSpeed * rightReverseMultiplier;
             break;
     }
