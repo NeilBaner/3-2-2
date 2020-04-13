@@ -183,71 +183,71 @@ ISR(INT1_vect) {
 }
 
 void leftISR() {
-  leftForwardMultiplier = 0;
-  leftReverseMultiplier = 0;
+//  leftForwardMultiplier = 0;
+//  leftReverseMultiplier = 0;
   switch (dir) {
     case FORWARD:
       leftForwardTicks++;
       forwardDist = ((double)(leftForwardTicks) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightForwardTicks);
-      leftReverseMultiplier = 0;
+//      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightForwardTicks);
+//      leftReverseMultiplier = 0;
 
       break;
     case BACKWARD:
       leftReverseTicks++;
       reverseDist = ((double)(leftReverseTicks) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightReverseTicks);
-      leftForwardMultiplier = 0;
+//      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightReverseTicks);
+//      leftForwardMultiplier = 0;
       break;
     case LEFT:
       leftReverseTicksTurns++;
-      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightForwardTicks); // tbh i'm not sure if this needs correction?
-      leftForwardMultiplier = 0;
+//      leftReverseMultiplier = 1 - 0.1 * (leftReverseTicks - rightForwardTicks); // tbh i'm not sure if this needs correction?
+//      leftForwardMultiplier = 0;
       break;
     case RIGHT:
       leftForwardTicksTurns++;
-      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightReverseTicks); // does it need correction?
-      leftReverseTicks = 0;
+//      leftForwardMultiplier = 1 - 0.1 * (leftForwardTicks - rightReverseTicks); // does it need correction?
+//      leftReverseTicks = 0;
       break;
   }
-  OCR0B = pwmVal(initialSpeed * leftForwardMultiplier);
-  OCR0A = pwmVal(initialSpeed * leftReverseMultiplier);
+//  OCR0B = pwmVal(initialSpeed * leftForwardMultiplier);
+//  OCR0A = pwmVal(initialSpeed * leftReverseMultiplier);
 }
 
 void rightISR() {
-  rightForwardMultiplier = 0;
-  rightReverseMultiplier = 0;
+//  rightForwardMultiplier = 0;
+//  rightReverseMultiplier = 0;
   switch (dir) {
     case FORWARD:
       rightForwardTicks++;
       forwardDist = ((double)(rightForwardTicks - 5) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      rightReverseMultiplier = 0;
-      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftForwardTicks); //actually... why not rightForwardTicks = leftForwardTicks?
+//      rightReverseMultiplier = 0;
+//      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftForwardTicks); //actually... why not rightForwardTicks = leftForwardTicks?
 
       break;
     case BACKWARD:
       rightReverseTicks++;
       reverseDist = ((double)(rightReverseTicks - 5) * PI * WHEEL_DIAMETER) /
                     (double)COUNTS_PER_REV;
-      rightForwardMultiplier = 0;
-      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftReverseTicks);
+//      rightForwardMultiplier = 0;
+//      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftReverseTicks);
       break;
     case LEFT:
       rightForwardTicksTurns++;
-      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftReverseTicks);
-      rightReverseMultiplier = 0;
+//      rightForwardMultiplier = 1 - 0.1 * (rightForwardTicks - leftReverseTicks);
+//      rightReverseMultiplier = 0;
       break;
     case RIGHT:
       rightReverseTicksTurns++;
-      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftForwardTicks);
-      rightForwardMultiplier = 0;
+//      rightReverseMultiplier = 1 - 0.1 * (rightReverseTicks - leftForwardTicks);
+//      rightForwardMultiplier = 0;
       break;
   }
-  OCR1B = pwmVal(initialSpeed * rightForwardMultiplier);
-  OCR1A = pwmVal(initialSpeed * rightReverseMultiplier);
+//  OCR1B = pwmVal(initialSpeed * rightForwardMultiplier);
+//  OCR1A = pwmVal(initialSpeed * rightReverseMultiplier);
 
 }
 
@@ -682,7 +682,7 @@ void loop() {
   }
   if (dir == STOP) {
     stopAlex();
-    putArduinoToStandby();
+    //putArduinoToStandby();
   }
   TPacket recvPacket;  // This holds commands from the Pi
   TResult result = readPacket(&recvPacket);
