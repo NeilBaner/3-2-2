@@ -1,7 +1,26 @@
 #ifndef __CONTROL_H__
 #define __CONTROL_H__
-
 #include <stdint.h>
+// Packet types
+typedef enum
+{
+  PACKET_TYPE_COMMAND = 0,
+  PACKET_TYPE_RESPONSE = 1,
+  PACKET_TYPE_ERROR = 2,
+  PACKET_TYPE_MESSAGE = 3,
+  PACKET_TYPE_HELLO = 4
+} TPacketType;
+
+// Response types. This goes into the command field
+typedef enum
+{
+  RESP_OK = 0,
+  RESP_STATUS = 1,
+  RESP_BAD_PACKET = 2,
+  RESP_BAD_CHECKSUM = 3,
+  RESP_BAD_COMMAND = 4,
+  RESP_BAD_RESPONSE = 5
+} TResponseType;
 
 #define MAX_STR_LEN   32
 // This packet has 1 + 1 + 2 + 32 + 16 * 4 = 100 bytes
@@ -14,17 +33,29 @@ typedef struct
   uint32_t params[16];
 } TPacket;
 
-
-#endif
-// Packet types
+// Commands
+// For direction commands, param[0] = distance in cm to move
+// param[1] = speed
 typedef enum
 {
-  PACKET_TYPE_COMMAND = 0,
-  PACKET_TYPE_RESPONSE = 1,
-  PACKET_TYPE_ERROR = 2,
-  PACKET_TYPE_MESSAGE = 3,
-  PACKET_TYPE_HELLO = 4
-} TPacketType;
+  COMMAND_FORWARD = 0,
+  COMMAND_REVERSE = 1,
+  COMMAND_TURN_LEFT = 2,
+  COMMAND_TURN_RIGHT = 3,
+  COMMAND_STOP = 4,
+  COMMAND_GET_STATS = 5,
+  COMMAND_CLEAR_STATS = 6
+} TCommandType;
+
+
+typedef enum {
+  STOP = 0,
+  FORWARD = 1,
+  BACKWARD = 2,
+  LEFT = 3,
+  RIGHT = 4
+} TDirection;
+#endif
 
 void setup() {
   // put your setup code here, to run once:
@@ -34,9 +65,10 @@ void setup() {
 
 // Setup serial comms, 9600 bps, 8N1, polling-based
 void setupSerial() {
-  UCSR0C = 0b00000110;
-  UBRR0 = 103;
-  UCSR0A = 0b00000000;
+  UCSR0C = 0b00000110; // 8 bits of data
+  UBRR0 = 103; 
+  //UCSR0A = 0b00000000;
+  UCSR0A = 0b10000000;
 }
 
 // Start Serial comms
