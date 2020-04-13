@@ -28,6 +28,8 @@ typedef enum
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(13, OUTPUT);
+  pinMode(5, OUTPUT);
   setupSerial();
   startSerial();
 }
@@ -150,9 +152,7 @@ void loop() {
   TResult result = readPacket(&recvPacket);
   if (result == PACKET_OK) {
     handlePacket(&recvPacket);
-  } else if (result == PACKET_BAD) {
-    sendBadPacket();
-  } else if (result == PACKET_CHECKSUM_BAD) {
-    sendBadChecksum();
-  }
+    digitalWrite(13, LOW);
+  } else 
+    digitalWrite(5, HIGH);
 }
