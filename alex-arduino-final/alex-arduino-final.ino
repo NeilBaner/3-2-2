@@ -44,6 +44,7 @@ volatile unsigned long leftForwardTicksPrevious, rightForwardTicksPrevious;
 volatile unsigned long leftReverseTicksPrevious, rightReverseTicksPrevious;
 
 volatile TDirection dir = STOP;
+volatile int PWMSpeed = 0;
 
 // SETUP ROUTINES
 
@@ -286,6 +287,8 @@ void pidISR() {
                     leftForwardMultiplier += 0.01;
                 }
             }
+            OCR0B = speedToGo * leftForwardMultiplier;
+            OCR1B = speedToGo * rightForwardMultiplier;
             break;
         case BACKWARD:
             leftDist = leftReverseTicks - leftReverseTicksPrevious;
@@ -303,6 +306,8 @@ void pidISR() {
                     leftReverseMultiplier += 0.01;
                 }
             }
+            OCR0A = speedToGo * leftReverseMultiplier;
+            OCR1A = PWMSpeed * rightReverseMultiplier;
             break;
     }
     leftForwardTicksPrevious = leftForwardTicks;
@@ -326,15 +331,15 @@ int pwmVal(float speed) {
 // indefinitely.
 void forward(float dist, float speed) {
     dir = FORWARD;
-    int val = pwmVal(speed);
+    PWMSpeed = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
     } else {
         deltaDist = 999999;
     }
     newDist = forwardDist + deltaDist;
-    OCR0B = leftForwardMultiplier * val;
-    OCR1B = rightForwardMultiplier * val;
+    OCR0B = leftForwardMultiplier * PWMSpeed;
+    OCR1B = rightForwardMultiplier * PWMSpeed;
     OCR0A = 0;
     OCR1A = 0;
 }
@@ -343,15 +348,15 @@ void forward(float dist, float speed) {
 // indefinitely.
 void reverse(float dist, float speed) {
     dir = BACKWARD;
-    int val = pwmVal(speed);
+    PWMSpeed = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
     } else {
         deltaDist = 999999;
     }
     newDist = reverseDist + deltaDist;
-    OCR0A = val;
-    OCR1A = val;
+    OCR0A = leftReverseMultiplier * PWMSpeed;
+    OCR1A = rightReverseMultiplier * PWMSpeed;
     OCR0B = 0;
     OCR1B = 0;
 }
