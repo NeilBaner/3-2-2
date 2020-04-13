@@ -357,7 +357,15 @@ void stopAlex() {
 
 // SERIAL ROUTINES
 
-int readSerial(char *buffer) {
+int readSerial(){
+  int count = 0;
+  while (UCSR0A & 0b10000000 == 0b10000000) {
+    buffer[count++] = UDR0;
+  }
+  return count;
+}
+
+int readSerialLessOld(char *buffer) {
   int count = 0;
   while (count < PACKET_SIZE) {
     while (UCSR0A & 0b10000000 == 0);
