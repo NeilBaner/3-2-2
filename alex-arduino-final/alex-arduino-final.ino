@@ -13,6 +13,7 @@
 #define WHEEL_DIAMETER 6.5
 #define ALEX_LENGTH 16
 #define ALEX_WIDTH 6
+
 #define PRR_TWI_MASK 0b10000000
 #define PRR_SPI_MASK 0b00000100
 #define ADCSRA_ADC_MASK 0b10000000
@@ -45,6 +46,9 @@ volatile unsigned long leftReverseTicksPrevious, rightReverseTicksPrevious;
 
 volatile TDirection dir = STOP;
 volatile int PWMSpeed = 0;
+
+float alexDiagonal = 0.0;
+float alexCirc = 0.0;
 
 // SETUP ROUTINES
 
@@ -220,16 +224,14 @@ void rightISR() {
     switch (dir) {
         case FORWARD:
             rightForwardTicks++;
-            forwardDist =
-                ((double)(rightForwardTicks) * PI * WHEEL_DIAMETER) /
-                (double)COUNTS_PER_REV;
+            forwardDist = ((double)(rightForwardTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
 
             break;
         case BACKWARD:
             rightReverseTicks++;
-            reverseDist =
-                ((double)(rightReverseTicks) * PI * WHEEL_DIAMETER) /
-                (double)COUNTS_PER_REV;
+            reverseDist = ((double)(rightReverseTicks)*PI * WHEEL_DIAMETER) /
+                          (double)COUNTS_PER_REV;
             break;
         case LEFT:
             rightForwardTicksTurns++;
@@ -299,6 +301,12 @@ int pwmVal(float speed) {
     return (int)((speed / 100.0) * 255.0);
 }
 
+unsigned long computeDeltaTicks(float ang) {
+    unsigned long ticks = (unsigned long)((ang * alexCirc * COUNTS_PER_REV) /
+                                          (360.0 * (WHEEL_DIAMETER * PI)));
+    return ticks;
+}
+
 // Move Alex forwards "dist" cm at speed "speed"%. When dist = 0, Alex goes
 // indefinitely.
 void forward(float dist, float speed) {
@@ -336,43 +344,31 @@ void reverse(float dist, float speed) {
 // Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void left(float ang, float speed) {
-    float alex_circ = PI * ALEX_WIDTH;
-    int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
-    dir = LEFT;
-    int initialSpeed = speed;
-    int val = pwmVal(speed);
-    int leftInit = leftReverseTicksTurns, rightInit = rightForwardTicksTurns;
-    while (
-        (leftInit + (ang * alex_circ_ticks / 360) < leftReverseTicksTurns &&
-         rightInit + (ang * alex_circ_ticks / 360) < rightForwardTicksTurns) ||
-        ang == 0) {
-        OCR0B = val;
-        OCR1A = val;
-        OCR0A = 0;
-        OCR1B = 0;
+    if (ang == 0) {
+        deltaTicks = 9999999;
+    } else {
+        deltaTicks = computeDeltaTicks(ang);
     }
-    stopAlex();
+    newTicks = leftReverseTicksTurns + deltaTicks;
+    OCR0B = val;
+    OCR1A = val;
+    OCR0A = 0;
+    OCR1B = 0;
 }
 
 // Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void right(float ang, float speed) {
-    float alex_circ = PI * ALEX_WIDTH;
-    int alex_circ_ticks = (alex_circ / (WHEEL_DIAMETER * PI)) * COUNTS_PER_REV;
-    dir = RIGHT;
-    int val = pwmVal(speed);
-    int initialSpeed = speed;
-    int leftInit = leftForwardTicksTurns, rightInit = rightReverseTicksTurns;
-    while (
-        (leftInit + (ang * alex_circ_ticks / 360) < leftForwardTicksTurns &&
-         rightInit + (ang * alex_circ_ticks / 360) < rightReverseTicksTurns) ||
-        ang == 0) {
-        OCR0A = val;
-        OCR1B = val;
-        OCR0B = 0;
-        OCR1A = 0;
+    if(ang == 0){
+        deltaTicks = 9999999;
+    }else {
+        deltaTicks = computeDeltaTicks(ang);
     }
-    stopAlex();
+    newTicks = rightReverseTicksTurns + deltaTicks;
+    OCR0A = val;
+    OCR1B = val;
+    OCR0B = 0;
+    OCR1A = 0;
 }
 
 // stop Alex, no comment.
@@ -395,25 +391,6 @@ int readSerial(char *buffer) {
     }
     return count;
 }
-
-// int readSerialLessOld(char *buffer) {
-//  int count = 0;
-//  while (count < PACKET_SIZE) {
-//    while (UCSR0A & 0b10000000 == 0);
-//    buffer[count++] = UDR0;
-//  }
-//  return count;
-//}
-//
-//
-// int readSerialOld(char *buffer) {
-//  int count = 0;
-//  while (UCSR0A & 0b00100000 == 0);
-//  while (UCSR0A & 0b10000000 == 0b10000000) {
-//    buffer[count++] = UDR0;
-//  }
-//  return count;
-//}
 
 void writeSerial(const char *buffer, int len) { Serial.write(buffer, len); }
 
@@ -682,6 +659,9 @@ void testMovements() {
 void testCommunications() {}
 
 void setup() {
+    alexDiagonal =
+        sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_WIDTH * ALEX_WIDTH));
+    alexCirc = PI * alexDiagonal;
     cli();
     setupEINT();
     setupSerial();
@@ -693,6 +673,7 @@ void setup() {
     enablePullups();
     initialiseState();
     sei();
+
     // waitForHello();
     // setupPowerSaving();
 }
@@ -709,6 +690,28 @@ void loop() {
                 if (reverseDist >= newDist) {
                     stopAlex();
                 }
+        }
+    }
+    if(deltaTicks > 0){
+        switch(dir){
+            case LEFT:
+                if(leftReverseTicksTurns >= newTicks){
+                    deltaTicks = 0;
+                    newTicks = 0;
+                    stopAlex();
+                }
+                break;
+            case RIGHT:
+                if(rightReverseTicksTurns >= newTicks){
+                    deltaTicks = 0;
+                    newTicks = 0;
+                    stopAlex();
+                }
+                breakk
+            case STOP:
+                deltaTicks = 0;
+                newTicks = 0;
+                stopAlex();
         }
     }
     if (dir == STOP) {
