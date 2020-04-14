@@ -8,6 +8,7 @@
 #define PIN6MASK 0b01000000
 
 volatile char dataSend, dataRecv;
+static volatile int num = 18;
 
 void setup() {
   // put your setup code here, to run once:
@@ -37,7 +38,16 @@ ISR(INT0_vect) {
 
 ISR(INT1_vect) {
   dataSend = '5'; // pin 5, blue
-  UCSR0B |= 0b01000000;
+  UCSR0B |= 0b00100000;
+}
+
+ISR(USART_RX_vect){
+    dataRecv = UDR0;
+    if(dataRecv == 5 + '0'){
+        num = 5;
+    }else if(dataRecv == 6 + '0'){
+        num = 6;
+    }
 }
 
 ISR(USART_UDRE_vect) {
@@ -52,12 +62,12 @@ void sendData(unsigned char data) {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (dataRecv == 6 + '0') { // pin 6, white
+  if (num == 6) { // pin 6, white
     PORTD = PIN6MASK;
     delay(1000);
     PORTD = !PIN6MASK;
     delay(500);
-  } else if (dataRecv == 6 + '0') { // pin 5, blue
+  } else if (num == 5) { // pin 5, blue
     PORTD = PIN5MASK;
     delay(1000);
     PORTD = !PIN5MASK;
