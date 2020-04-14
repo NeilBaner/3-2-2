@@ -40,7 +40,7 @@ void setupSerial() {
   UCSR0B = 0b10011000;
 }
 
-ISR(INT0_vect) {
+/*ISR(INT0_vect) {
   dataSend = '6'; // pin 6, white
   UCSR0B |= 0b00100000;
 }
@@ -48,7 +48,7 @@ ISR(INT0_vect) {
 ISR(INT1_vect) {
   dataSend = '5'; // pin 5, blue
   UCSR0B |= 0b00100000;
-}
+}*/
 
 ISR(USART_RX_vect){
     dataRecv = UDR0;
