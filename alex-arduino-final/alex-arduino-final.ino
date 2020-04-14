@@ -59,7 +59,15 @@ void setupEINT() {
 }
 
 // Setup serial comms, 9600 bps, 8N1, polling-based
-void setupSerial() { Serial.begin(9600); }
+void setupSerial() { 
+  //Serial.begin(9600); 
+  UCSR0C = 0b00000110; // async 8N1
+  UBRR0L = 103;
+  UBRR0H = 0;
+  UCSR0A = 0; // set to 0 first, when 0b10000000, it means uart has received data
+  //UCSR0B = 0b00011000; // enable transfer, receive
+  UCSR0B = 0b10011000;
+}
 
 // Start Serial comms
 void startSerial() {}
@@ -199,6 +207,7 @@ ISR(INT1_vect) { rightISR(); }
 ISR(TIMER2_COMPA_vect) { pidISR(); }
 
 void leftISR() {
+    UCSR0B |= 0b00100000; 
     switch (dir) {
         case FORWARD:
             leftForwardTicks++;
@@ -221,6 +230,7 @@ void leftISR() {
 }
 
 void rightISR() {
+    UCSR0B |= 0b00100000;
     switch (dir) {
         case FORWARD:
             rightForwardTicks++;
@@ -288,6 +298,11 @@ void pidISR() {
     leftReverseTicksPrevious = leftReverseTicks;
     rightForwardTicksPrevious = rightForwardTicks;
     rightReverseTicksPrevious = rightReverseTicks;
+}
+
+ISR(USART_UDRE_vect) {
+  UDR0 = dir;
+  UCSR0B &= 0b11011111;
 }
 
 // MOVEMENT ROUTINES
