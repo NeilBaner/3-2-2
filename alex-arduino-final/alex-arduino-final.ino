@@ -207,7 +207,6 @@ ISR(INT1_vect) { rightISR(); }
 ISR(TIMER2_COMPA_vect) { pidISR(); }
 
 void leftISR() {
-    UCSR0B |= 0b00100000; 
     switch (dir) {
         case FORWARD:
             leftForwardTicks++;
@@ -230,7 +229,6 @@ void leftISR() {
 }
 
 void rightISR() {
-    UCSR0B |= 0b00100000;
     switch (dir) {
         case FORWARD:
             rightForwardTicks++;
@@ -301,7 +299,7 @@ void pidISR() {
 }
 
 ISR(USART_UDRE_vect) {
-  UDR0 = dir;
+  //UDR0 = dir; // wait idk what this should be 
   UCSR0B &= 0b11011111;
 }
 
@@ -410,8 +408,7 @@ int readSerial(char *buffer) {
     }
     return count;*/
     int count = 0;
-    while (count < PACKET_SIZE) {
-    while ((UCSR0A & 0b10000000) == 0) ;
+    while ((UCSR0A & 0b10000000) == 0b10000000) {
         buffer[count++] = UDR0;
     }
     return count;
@@ -421,7 +418,8 @@ void writeSerial(const char *buffer, int len) {
   //Serial.write(buffer, len); 
     int count = 0;
     while ((UCSR0A & 0b00100000) == 0);
-      UDR0 = buffer[count++];
+    while (count != len)
+        UDR0 = buffer[count++];
 }
 
 // COMMUNICATION ROUTINES
