@@ -6,6 +6,8 @@
 //pin 5, 6 are port d 5, 6 respectively
 #define PIN5MASK 0b00100000
 #define PIN6MASK 0b01000000
+#define pb1 2
+#define pb2 3
 
 volatile char dataSend, dataRecv;
 static volatile int num = 18;
@@ -16,6 +18,10 @@ void setup() {
   setupEINT();
   setupSerial();
   DDRD |= 0b01100000; //pins 5,6 are port d
+  /*pinMode(pb1, INPUT_PULLUP);
+  pinMode(pb2, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(pb1), switchISR1, RISING);
+  attachInterrupt(digitalPinToInterrupt(pb2), switchISR2, RISING);*/
   sei();
 }
 
@@ -26,9 +32,12 @@ void setupEINT() {
 
 void setupSerial() {
   UCSR0C = 0b00000110; // async 8N1
-  UBRR0 = 103; // we want 9600
+  //UBRR0 = 103; // we want 9600
+  UBRR0L = 103;
+  UBRR0H = 0;
   UCSR0A = 0; // set to 0 first, when 0b10000000, it means uart has received data
-  UCSR0B = 0b00011000; // enable transfer, receive
+  //UCSR0B = 0b00011000; // enable transfer, receive
+  UCSR0B = 0b10011000;
 }
 
 ISR(INT0_vect) {
@@ -56,8 +65,16 @@ ISR(USART_UDRE_vect) {
 }
 
 void sendData(unsigned char data) {
-  while (UCSR0A & 0b00100000 == 0);
-  UDR0 = (unsigned char)data;
+  dataSend = data + '0';
+  while ((UCSR0A & 0b00100000) == 0);
+  UDR0 = (unsigned char)dataSend;
+}
+
+unsigned char receiveData(unsigned char data) {
+  while ((UCSR0A & 0b10000000) == 0) ;
+  unsigned char dataRecv = UDR0;  
+
+  return dataRecv - '0';
 }
 
 void loop() {
