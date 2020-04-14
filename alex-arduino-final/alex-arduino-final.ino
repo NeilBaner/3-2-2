@@ -404,14 +404,25 @@ void stopAlex() {
 // SERIAL ROUTINES
 
 int readSerial(char *buffer) {
-    int count = 0;
+    /*int count = 0;
     while (Serial.available()) {
         buffer[count++] = Serial.read();
+    }
+    return count;*/
+    int count = 0;
+    while (count < PACKET_SIZE) {
+    while ((UCSR0A & 0b10000000) == 0) ;
+        buffer[count++] = UDR0;
     }
     return count;
 }
 
-void writeSerial(const char *buffer, int len) { Serial.write(buffer, len); }
+void writeSerial(const char *buffer, int len) { 
+  //Serial.write(buffer, len); 
+    int count = 0;
+    while ((UCSR0A & 0b00100000) == 0);
+      UDR0 = buffer[count++];
+}
 
 // COMMUNICATION ROUTINES
 
