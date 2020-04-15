@@ -22,8 +22,7 @@
 #define PRR_TIMER0_MASK 0b00100000
 #define PRR_TIMER1_MASK 0b00001000
 #define SMCR_SLEEP_ENABLE_MASK 0b00000001
-#define SMCR_STANDBY_MODE_MASK \
-    0b11111100  // 110 for standby, last bit is the sleep enable bit
+#define SMCR_STANDBY_MODE_MASK 0b11111100  // 110 for standby, last bit is the sleep enable bit
 
 volatile unsigned long leftForwardTicks, rightForwardTicks;
 volatile unsigned long leftReverseTicks, rightReverseTicks;
@@ -50,6 +49,9 @@ volatile int PWMSpeed = 0;
 float alexDiagonal = 0.0;
 float alexCirc = 0.0;
 
+volatile TCommandType command = 18;
+volatile int dataSend, dataRecv;
+
 // SETUP ROUTINES
 
 // INT0+INT1 enabled, FE triggered
@@ -66,11 +68,13 @@ void setupSerial() {
   UBRR0H = 0;
   UCSR0A = 0; // set to 0 first, when 0b10000000, it means uart has received data
   //UCSR0B = 0b00011000; // enable transfer, receive
-  UCSR0B = 0b10011000;
+  //UCSR0B = 0b10011000;
 }
 
 // Start Serial comms
-void startSerial() {}
+void startSerial() {
+    UCSR0B = 0b10011000;
+}
 
 // Setup timers 0 and 1 for PWM
 void setupMotors() {
@@ -299,8 +303,23 @@ void pidISR() {
 }
 
 ISR(USART_UDRE_vect) {
-  //UDR0 = dir; // wait idk what this should be 
+  UDR0 = dataSend; // wait idk what this should be 
   UCSR0B &= 0b11011111;
+}
+
+ISR(USART_RX_vect){
+    dataRecv = UDR0;
+    if(dataRecv == COMMAND_FORWARD){
+        dir = FORWARD;
+    }else if(dataRecv == COMMAND_REVERSE){
+        dir = BACKWARD;
+    }else if(dataRecv == COMMAND_TURN_LEFT){ 
+        dir = LEFT;
+    }else if(dataRecv == COMMAND_TURN_RIGHT){
+        dir = RIGHT;
+    }else if(dataRecv == COMMAND_STOP){
+        dir = STOP;
+    }
 }
 
 // MOVEMENT ROUTINES
@@ -324,6 +343,7 @@ unsigned long computeDeltaTicks(float ang) {
 // indefinitely.
 void forward(float dist, float speed) {
     dir = FORWARD;
+    command = 0;
     PWMSpeed = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
@@ -341,6 +361,7 @@ void forward(float dist, float speed) {
 // indefinitely.
 void reverse(float dist, float speed) {
     dir = BACKWARD;
+    command = 1;
     PWMSpeed = pwmVal(speed);
     if (dist > 0) {
         deltaDist = dist;
@@ -358,6 +379,7 @@ void reverse(float dist, float speed) {
 // indefinitely
 void left(float ang, float speed) {
     dir = LEFT;
+    command = 2;
     PWMSpeed = pwmVal(speed);
     if (ang == 0) {
         deltaTicks = 9999999;
@@ -375,6 +397,7 @@ void left(float ang, float speed) {
 // indefinitely
 void right(float ang, float speed) {
     dir = RIGHT;
+    command = 3;
     PWMSpeed = pwmVal(speed);
     if(ang == 0){
         deltaTicks = 9999999;
@@ -391,6 +414,7 @@ void right(float ang, float speed) {
 // stop Alex, no comment.
 void stopAlex() {
     dir = STOP;
+    command = 4;
     OCR0A = 0;
     OCR0B = 0;
     OCR1A = 0;
@@ -411,6 +435,7 @@ int readSerial(char *buffer) {
     while ((UCSR0A & 0b10000000) == 0b10000000) {
         buffer[count++] = UDR0;
     }
+    dataRecv = UDR0;
     return count;
 }
 
@@ -419,7 +444,8 @@ void writeSerial(const char *buffer, int len) {
     int count = 0;
     while ((UCSR0A & 0b00100000) == 0);
     while (count != len)
-        UDR0 = buffer[count++];
+        UDR0 = buffer[count++]; 
+    UDR0 = dataSend;
 }
 
 // COMMUNICATION ROUTINES
