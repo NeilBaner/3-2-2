@@ -12,7 +12,7 @@
 
 #define WHEEL_DIAMETER 6.5
 #define ALEX_LENGTH 16
-#define ALEX_WIDTH 12
+#define ALEX_WIDTH 6
 
 #define PRR_TWI_MASK 0b10000000
 #define PRR_SPI_MASK 0b00000100
@@ -59,15 +59,7 @@ void setupEINT() {
 }
 
 // Setup serial comms, 9600 bps, 8N1, polling-based
-void setupSerial() { 
-  //Serial.begin(9600); 
-  UCSR0C = 0b00000110; // async 8N1
-  UBRR0L = 103;
-  UBRR0H = 0;
-  UCSR0A = 0; // set to 0 first, when 0b10000000, it means uart has received data
-  //UCSR0B = 0b00011000; // enable transfer, receive
-  UCSR0B = 0b10011000;
-}
+void setupSerial() { Serial.begin(9600); }
 
 // Start Serial comms
 void startSerial() {}
@@ -298,11 +290,6 @@ void pidISR() {
     rightReverseTicksPrevious = rightReverseTicks;
 }
 
-ISR(USART_UDRE_vect) {
-  //UDR0 = dir; // wait idk what this should be 
-  UCSR0B &= 0b11011111;
-}
-
 // MOVEMENT ROUTINES
 
 // Convert percentages to PWM values
@@ -357,16 +344,14 @@ void reverse(float dist, float speed) {
 // Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void left(float ang, float speed) {
-    dir = LEFT;
-    PWMSpeed = pwmVal(speed);
     if (ang == 0) {
         deltaTicks = 9999999;
     } else {
         deltaTicks = computeDeltaTicks(ang);
     }
     newTicks = leftReverseTicksTurns + deltaTicks;
-    OCR0B = PWMSpeed;
-    OCR1A = PWMSpeed;
+    OCR0B = val;
+    OCR1A = val;
     OCR0A = 0;
     OCR1B = 0;
 }
@@ -374,16 +359,14 @@ void left(float ang, float speed) {
 // Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void right(float ang, float speed) {
-    dir = RIGHT;
-    PWMSpeed = pwmVal(speed);
     if(ang == 0){
         deltaTicks = 9999999;
     }else {
         deltaTicks = computeDeltaTicks(ang);
     }
     newTicks = rightReverseTicksTurns + deltaTicks;
-    OCR0A = PWMSpeed;
-    OCR1B = PWMSpeed;
+    OCR0A = val;
+    OCR1B = val;
     OCR0B = 0;
     OCR1A = 0;
 }
@@ -402,25 +385,14 @@ void stopAlex() {
 // SERIAL ROUTINES
 
 int readSerial(char *buffer) {
-    /*int count = 0;
+    int count = 0;
     while (Serial.available()) {
         buffer[count++] = Serial.read();
-    }
-    return count;*/
-    int count = 0;
-    while ((UCSR0A & 0b10000000) == 0b10000000) {
-        buffer[count++] = UDR0;
     }
     return count;
 }
 
-void writeSerial(const char *buffer, int len) { 
-  //Serial.write(buffer, len); 
-    int count = 0;
-    while ((UCSR0A & 0b00100000) == 0);
-    while (count != len)
-        UDR0 = buffer[count++];
-}
+void writeSerial(const char *buffer, int len) { Serial.write(buffer, len); }
 
 // COMMUNICATION ROUTINES
 
@@ -689,7 +661,7 @@ void testCommunications() {}
 void setup() {
     alexDiagonal =
         sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_WIDTH * ALEX_WIDTH));
-    alexCirc = PI * ALEX_WIDTH;
+    alexCirc = PI * alexDiagonal;
     cli();
     setupEINT();
     setupSerial();
@@ -735,7 +707,7 @@ void loop() {
                     newTicks = 0;
                     stopAlex();
                 }
-                break;
+                breakk
             case STOP:
                 deltaTicks = 0;
                 newTicks = 0;
