@@ -73,7 +73,7 @@ void setupSerial() {
 
 // Start Serial comms
 void startSerial() {
-    UCSR0B = 0b10011000;
+    UCSR0B = 0b11011000;
 }
 
 // Setup timers 0 and 1 for PWM
@@ -303,12 +303,17 @@ void pidISR() {
 }
 
 ISR(USART_UDRE_vect) {
-  UDR0 = dataSend; // wait idk what this should be 
-  UCSR0B &= 0b11011111;
+  unsigned char data;
+  TResult result = readSerial(buffer);
+  if (result == RESP_OK)
+      UDR0 = dataSend; // wait idk what this should be 
+  else 
+      if (result == !(RESP_OK | RESP_STATUS))
+          UCSR0B &= 0b11011111;
 }
 
 ISR(USART_RX_vect){
-    dataRecv = UDR0;
+    /*dataRecv = UDR0;
     if(dataRecv == COMMAND_FORWARD){
         dir = FORWARD;
     }else if(dataRecv == COMMAND_REVERSE){
@@ -319,7 +324,9 @@ ISR(USART_RX_vect){
         dir = RIGHT;
     }else if(dataRecv == COMMAND_STOP){
         dir = STOP;
-    }
+    }*/
+    unsigned char data = UDR0;
+    writeSerial(data);
 }
 
 // MOVEMENT ROUTINES
