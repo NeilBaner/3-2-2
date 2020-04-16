@@ -99,7 +99,7 @@ void startMotors() {
 // Setup Timer 2 for the "PID"
 void setupTimer2() {
     TCCR2A = 0b00000010;  // set to CTC mode
-    OCR2A = 50;
+    OCR2A = 20;
     // 156 was the Prachi value
     TIMSK2 = 0b00000010;  // Interrupt on Compare Match w/OCR2A
 }
@@ -250,15 +250,15 @@ void pidISR() {
             rightDist = rightForwardTicks - rightForwardTicksPrevious;
             if (leftDist - rightDist > 0) {
                 if (rightForwardMultiplier == 1) {
-                    leftForwardMultiplier -= 0.01;
+                    leftForwardMultiplier -= (0.01 * (leftDist - rightDist));
                 } else {
-                    rightForwardMultiplier += 0.01;
+                    rightForwardMultiplier += (0.01 * (leftDist - rightDist));
                 }
             } else if (leftDist - rightDist < 0) {
                 if (leftForwardMultiplier == 1) {
-                    rightForwardMultiplier -= 0.01;
+                    rightForwardMultiplier -= (0.01 * (rightDist - leftDist));
                 } else {
-                    leftForwardMultiplier += 0.01;
+                    leftForwardMultiplier += (0.01 * (rightDist - leftDist));
                 }
             }
             OCR0B = PWMSpeed * leftForwardMultiplier;
@@ -471,7 +471,7 @@ void sendResponse(TPacket *packet) {
 
 void sendStatus() {
     TPacket status;
-    status.command = COMMAND_GET_STATS;
+    status.command = RESP_STATUS;
     status.packetType = PACKET_TYPE_RESPONSE;
     status.params[0] = leftForwardTicks;
     status.params[1] = rightForwardTicks;
@@ -556,7 +556,7 @@ void handleCommand(TPacket *command) {
             break;
         case COMMAND_CLEAR_STATS:
             sendOK();
-            clearCounters(command->params[0]);
+            clearCounters();
             break;
         case COMMAND_GET_STATS:
             sendOK();
