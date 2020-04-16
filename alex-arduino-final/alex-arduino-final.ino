@@ -344,14 +344,16 @@ void reverse(float dist, float speed) {
 // Turn Alex left "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void left(float ang, float speed) {
+    dir = LEFT;
+    PWMSpeed = pwmVal(speed);
     if (ang == 0) {
         deltaTicks = 9999999;
     } else {
         deltaTicks = computeDeltaTicks(ang);
     }
     newTicks = leftReverseTicksTurns + deltaTicks;
-    OCR0B = val;
-    OCR1A = val;
+    OCR0B = PWMSpeed;
+    OCR1A = PWMSpeed;
     OCR0A = 0;
     OCR1B = 0;
 }
@@ -359,14 +361,16 @@ void left(float ang, float speed) {
 // Turn Alex right "ang" degrees at speed "speed"%. When ang = 0, Alex turns
 // indefinitely
 void right(float ang, float speed) {
+    dir = RIGHT;
+    PWMSpeed = pwmVal(speed);
     if(ang == 0){
         deltaTicks = 9999999;
     }else {
         deltaTicks = computeDeltaTicks(ang);
     }
     newTicks = rightReverseTicksTurns + deltaTicks;
-    OCR0A = val;
-    OCR1B = val;
+    OCR0A = PWMSpeed;
+    OCR1B = PWMSpeed;
     OCR0B = 0;
     OCR1A = 0;
 }
@@ -707,7 +711,7 @@ void loop() {
                     newTicks = 0;
                     stopAlex();
                 }
-                breakk
+                break;
             case STOP:
                 deltaTicks = 0;
                 newTicks = 0;
