@@ -22,8 +22,7 @@
 #define PRR_TIMER0_MASK 0b00100000
 #define PRR_TIMER1_MASK 0b00001000
 #define SMCR_SLEEP_ENABLE_MASK 0b00000001
-#define SMCR_STANDBY_MODE_MASK \
-    0b11111100  // 110 for standby, last bit is the sleep enable bit
+#define SMCR_STANDBY_MODE_MASK 0b11111100  // 110 for standby, last bit is the sleep enable bit
 
 volatile unsigned long leftForwardTicks, rightForwardTicks;
 volatile unsigned long leftReverseTicks, rightReverseTicks;
