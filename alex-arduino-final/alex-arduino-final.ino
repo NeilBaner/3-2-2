@@ -260,6 +260,8 @@ void pidISR() {
                     leftForwardMultiplier += (0.01 * (rightDist - leftDist));
                 }
             }
+            leftForwardMultiplier = (leftForwardMultiplier > 1.0) ? 1.0 : (leftForwardMultiplier < 0.0) ? 0.0 : leftForwardMultiplier;
+            rightForwardMultiplier = (rightForwardMultiplier > 1.0) ? 1.0 : (rightForwardMultiplier < 0.0) ? 0.0 : rightForwardMultiplier;
             OCR0B = PWMSpeed * leftForwardMultiplier;
             OCR1B = PWMSpeed * rightForwardMultiplier;
             break;
@@ -279,6 +281,8 @@ void pidISR() {
                     leftReverseMultiplier += 0.01;
                 }
             }
+            leftReverseMultiplier = (leftReverseMultiplier > 1.0) ? 1.0 : (leftReverseMultiplier < 0.0) ? 0.0 : leftReverseMultiplier;
+            rightReverseMultiplier = (rightReverseMultiplier > 1.0) ? 1.0 : (rightReverseMultiplier < 0.0) ? 0.0 : rightReverseMultiplier;
             OCR0A = PWMSpeed * leftReverseMultiplier;
             OCR1A = PWMSpeed * rightReverseMultiplier;
             break;
