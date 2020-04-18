@@ -528,26 +528,22 @@ void handleCommand(TPacket *command) {
         case COMMAND_FORWARD:
             sendOK();
             forward((float)command->params[0], (float)command->params[1]);
-            SMCR = 00001100;  // clear the enable sleep bit immediately after
-                              // waking up?
+            SMCR &= ~0b00000001;  // clear the SE bit after waking up
             break;
         case COMMAND_REVERSE:
             sendOK();
             reverse((float)command->params[0], (float)command->params[1]);
-            SMCR = 00001100;  // clear the sleep bit immediately after waking
-                              // up?
+            SMCR &= ~0b00000001;  // clear the SE bit after waking up
             break;
         case COMMAND_TURN_LEFT:
             sendOK();
             left((float)command->params[0], (float)command->params[1]);
-            SMCR = 00001100;  // clear the sleep bit immediately after waking
-                              // up?
+            SMCR &= ~0b00000001;  // clear the SE bit after waking up
             break;
         case COMMAND_TURN_RIGHT:
             sendOK();
             right((float)command->params[0], (float)command->params[1]);
-            SMCR = 00001100;  // clear the sleep bit immediately after waking
-                              // up?
+            SMCR &= ~0b00000001; // clear the SE bit after waking up
             break;
         case COMMAND_STOP:
             sendOK();
@@ -611,14 +607,6 @@ void WDT_off(void) {
 void setupPowerSaving() {
     // Turn off the Watchdog Timer
     WDT_off();
-    /*// Modify PRR to shut down TWI
-      PRR |= PRR_TWI_MASK;
-      // Modify PRR to shut down SPI
-      PRR |= PRR_SPI_MASK;
-      // Modify ADCSRA to disable ADC,
-      PRR |= ADCSRA_ADC_MASK;
-      // then modify PRR to shut down ADC
-      PRR |= PRR_ADC_MASK; */
     // Set the SMCR to choose the STANDBY sleep mode
     SMCR |= SMCR_STANDBY_MODE_MASK;  // we want 00001100
                                      // Do not set the Sleep Enable (SE) bit yet
