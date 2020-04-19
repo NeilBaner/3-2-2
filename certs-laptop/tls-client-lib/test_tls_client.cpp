@@ -49,12 +49,12 @@ void *writerThread(void *conn) {
     EXIT_THREAD(conn);
 }
 
-#define SERVER_NAME "localhost"
+#define SERVER_NAME "192.168.1.201"
 #define CA_CERT_FNAME "signing.pem"
 #define PORT_NUM 5000
 #define CLIENT_CERT_FNAME "laptop.crt"
 #define CLIENT_KEY_FNAME "laptop.key"
-#define SERVER_NAME_ON_CERT "alex.epp.com"
+#define SERVER_NAME_ON_CERT "192.168.1.201"
 
 int main() {
 

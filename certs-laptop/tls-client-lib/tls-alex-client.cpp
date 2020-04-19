@@ -222,7 +222,7 @@ void *writerThread(void *conn)
 #define CLIENT_KEY_NAME "laptop.key"
 #define CLIENT_CERT_NAME "laptop.crt"
 #define CA_CERT_NAME "signing.pem"
-#define SERVER_NAME_ON_CERT "322Alex"
+#define SERVER_NAME_ON_CERT "192.168.1.201"
 /* END TODO */
 void connectToServer(const char *serverName, int portNum)
 {
