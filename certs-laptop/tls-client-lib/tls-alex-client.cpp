@@ -104,7 +104,7 @@ void sendData(void *conn, const char *buffer, int len)
 	{
 		/* TODO: Insert SSL write here to write buffer to network */
 
-
+		c = sslWrite(conn,buffer,len);
 		/* END TODO */	
 		networkActive = (c > 0);
 	}
@@ -118,8 +118,9 @@ void *readerThread(void *conn)
 	while(networkActive)
 	{
 		/* TODO: Insert SSL read here into buffer */
+		len = sslRead(conn,buffer,len);
 
-        printf("read %d bytes from server.\n", len);
+        	printf("read %d bytes from server.\n", len);
 		
 		/* END TODO */
 
@@ -132,7 +133,9 @@ void *readerThread(void *conn)
 	printf("Exiting network listener thread\n");
     
     /* TODO: Stop the client loop and call EXIT_THREAD */
-
+	printf("writer: Server closed connection. Exiting. \n");
+	stopClient();
+	EXIT_THREAD(conn);
     /* END TODO */
 }
 
@@ -207,19 +210,24 @@ void *writerThread(void *conn)
 	printf("Exiting keyboard thread\n");
 
     /* TODO: Stop the client loop and call EXIT_THREAD */
-
+	printf("writer: Server closed connection. Exiting. \n");
+	stopClient();
+	EXIT_THREAD(conn);
     /* END TODO */
 }
 
 /* TODO: #define filenames for the client private key, certificatea,
    CA filename, etc. that you need to create a client */
 
-
+#define CLIENT_KEY_NAME "laptop.key"
+#define CLIENT_CERT_NAME "laptop.crt"
+#define CA_CERT_NAME "signing.pem"
+#define SERVER_NAME_ON_CERT "322Alex"
 /* END TODO */
 void connectToServer(const char *serverName, int portNum)
 {
     /* TODO: Create a new client */
-
+	createClient(serverName, portNum,1, CA_CERT_NAME, SERVER_NAME_ON_CERT,1,CLIENT_CERT_NAME,CLIENT_KEY_NAME,readerThread,writerThread);		
     /* END TODO */
 }
 
@@ -237,7 +245,7 @@ int main(int ac, char **av)
     /* TODO: Add in while loop to prevent main from exiting while the
     client loop is running */
 
-
+	while(client_is_running());
 
     /* END TODO */
 	printf("\nMAIN exiting\n\n");
